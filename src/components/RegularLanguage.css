@@ -1,0 +1,33 @@
+.ant-layout-content .ant-layout {
+    padding: 10px;
+}
+
+.ant-layout-content h1 {
+    text-align: left;
+}
+
+.ant-layout-content textarea {
+    resize: none;
+}
+
+.ant-layout-content .field {
+    position: relative;
+    border-left: 40px solid #1890ff;
+    font-size: small;
+    display: inline-block;
+}
+
+.ant-layout-content .field.accept {
+    padding-bottom: 4px;
+}
+
+.ant-layout-content .field h2 {
+    font-size: small;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    position: absolute;
+    top: 50%;
+    margin-left: -20px;
+    transform: translateX(-50%) translateY(-50%) rotate(-90deg);
+}

@@ -4,6 +4,7 @@ import {
   Menu,
 } from 'antd';
 
+import RegularLanguage from './RegularLanguage';
 import logo from '../assets/logo.svg';
 
 import './App.css';
@@ -23,32 +24,15 @@ const App: React.FC = () => {
           <a href="http://www.dcs.bbk.ac.uk/~michael/foc/foc.html">Course</a>
         </div>
       </Header>
-      <Layout>
-        <Sider width="300px">
-          <Menu theme="dark" defaultSelectedKeys={['reglang']}>
-            <Menu.Item key="reglang">Regular languages</Menu.Item>
-            <Menu.Item key="automata">Automata</Menu.Item>
-          </Menu>
-        </Sider>
-        <Layout>
-          <Content>
-          <img src={logo} className="app-logo-icon" alt="logo" />
-            
-            <p>
-              Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-            <a
-              className="App-link"
-              href="https://reactjs.org"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn React
-            </a>
-          </Content>
-        </Layout>
-
-      </Layout>
+      <Sider width="300px">
+        <Menu theme="dark" defaultSelectedKeys={['reglang']}>
+          <Menu.Item key="reglang">Regular languages</Menu.Item>
+          <Menu.Item key="automata">Automata</Menu.Item>
+        </Menu>
+      </Sider>
+      <Content>
+        <RegularLanguage />
+      </Content>
     </Layout>
   );
 }
