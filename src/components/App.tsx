@@ -17,7 +17,7 @@ const App: React.FC = () => {
       <Header>
         <div className="logo">
           <img src={logo} className="icon" alt="logo" />
-          <a href="">Fundamentals of Computing</a>
+          <a href=".">Fundamentals of Computing</a>
         </div>
         <div className="links">
           <a href="https://github.com/silvafj/focsimulation">GitHub</a>
