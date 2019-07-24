@@ -8,6 +8,49 @@
 
 .ant-layout-content textarea {
     resize: none;
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: transparent;
+}
+
+.ht-container {
+    overflow: hidden;
+    position: relative;
+    background-color: white;
+}
+
+.ht-backdrop {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    font-size: 14px;
+    padding: 4px 0;
+    text-align: left;
+}
+
+.ht-highlights {
+    width: auto;
+    height: auto;
+    border-color: transparent;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: transparent;
+    overflow: hidden;
+}
+
+.ht-highlights span.valid {
+    background: #bfb;
+    display: block;
+}
+
+.ht-highlights span.invalid {
+    background:#fbb;
+    display: block;
 }
 
 .ant-layout-content .field {

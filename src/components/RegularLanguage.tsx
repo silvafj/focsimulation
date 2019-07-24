@@ -18,20 +18,28 @@ function generateAutomaton(expression: string): any {
                     noam.re.string.toAutomaton(expression)))));
 }
 
-function testStrings(automaton: any, accept: Array<string>, reject: Array<string>): void {
+function testStrings(automaton: any, strings: Array<string>, expected: boolean): string {
+    var results: Array<string> = [];
+
     if (automaton.transitions.length === 0) {
-        return;
+        return '';
     }
 
-    for (let str of accept) {
+    for (let str of strings) {
+        var strState: string = expected ? 'invalid' : 'valid';
+
         try {
-            console.log(noam.fsm.isStringInLanguage(automaton, str));
+            if (noam.fsm.isStringInLanguage(automaton, str)) {
+                strState = expected ? 'valid' : 'invalid';
+            }
         } catch {
-            console.log(false);
+            //
         }
-        
+
+        results.push('<span class="' + strState + '">' + str + '</span>');
     }
-    console.log(accept, reject);
+
+    return results.join('');
 }
 
 function renderAutomaton(automaton: any, automatonParent: React.RefObject<HTMLDivElement>): void {
@@ -62,11 +70,12 @@ const RegularLanguage: React.FC = () => {
     const [acceptStrings, setAcceptStrings] = useState('');
     const [rejectStrings, setRejectStrings] = useState('');
 
+    const acceptBackdrop: React.RefObject<HTMLDivElement> = React.createRef();
+    const rejectBackdrop: React.RefObject<HTMLDivElement> = React.createRef();
     const automatonParent: React.RefObject<HTMLDivElement> = React.createRef();
 
     const automaton: any = generateAutomaton(expression);
     renderAutomaton(automaton, automatonParent);
-    testStrings(automaton, acceptStrings.split('\n'), rejectStrings.split('\n'));
 
     return (
         <Layout>
@@ -76,13 +85,34 @@ const RegularLanguage: React.FC = () => {
             <h1>Test strings</h1>
             <div className="field accept">
                 <h2>Accept</h2>
-                <Input.TextArea rows={8}
-                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setAcceptStrings(event.target.value)} />
+
+                <div className="ht-container">
+                    <div className="ht-backdrop" ref={acceptBackdrop}>
+                        <div className="ht-highlights" dangerouslySetInnerHTML={{
+                            __html:
+                                testStrings(automaton, acceptStrings.split('\n'), true)
+                        }}>
+                        </div>
+                    </div>
+                    <Input.TextArea rows={8}
+                        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setAcceptStrings(event.target.value)}
+                    />
+                </div>
             </div>
             <div className="field reject">
                 <h2>Reject</h2>
-                <Input.TextArea rows={8}
-                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setRejectStrings(event.target.value)} />
+                <div className="ht-container">
+                    <div className="ht-backdrop" ref={rejectBackdrop}>
+                        <div className="ht-highlights" dangerouslySetInnerHTML={{
+                            __html:
+                                testStrings(automaton, rejectStrings.split('\n'), false)
+                        }}>
+                        </div>
+                    </div>
+                    <Input.TextArea rows={8}
+                        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setRejectStrings(event.target.value)}
+                    />
+                </div>
             </div>
             <div className="automaton" ref={automatonParent} />
         </Layout>
