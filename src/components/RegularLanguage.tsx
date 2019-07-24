@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Layout,
     Input,
@@ -10,34 +10,47 @@ import { Module, render } from 'viz.js/full.render.js';
 
 import './RegularLanguage.css';
 
-function clearAutomaton(target: React.RefObject<HTMLDivElement>): void {
-    if (target.current != null) {
-        while (target.current.firstChild) {
-            target.current.removeChild(target.current.firstChild);
-        }
-    }
-}
-
-function generateAutomaton(expression: string, target: React.RefObject<HTMLDivElement>): void {
-    clearAutomaton(target);
-    if (!expression) {
-        return;
-    }
-
-    const automaton: any = noam.fsm.convertStatesToNumbers(
+function generateAutomaton(expression: string): any {
+    return noam.fsm.convertStatesToNumbers(
         noam.fsm.minimize(
             noam.fsm.convertNfaToDfa(
                 noam.fsm.convertEnfaToNfa(
                     noam.re.string.toAutomaton(expression)))));
+}
 
-    const dotString: string = noam.fsm.printDotFormat(automaton);
+function testStrings(automaton: any, accept: Array<string>, reject: Array<string>): void {
+    if (automaton.transitions.length === 0) {
+        return;
+    }
 
-    const viz = new Viz({ Module, render });
-    viz.renderSVGElement(dotString)
+    for (let str of accept) {
+        try {
+            console.log(noam.fsm.isStringInLanguage(automaton, str));
+        } catch {
+            console.log(false);
+        }
+        
+    }
+    console.log(accept, reject);
+}
+
+function renderAutomaton(automaton: any, automatonParent: React.RefObject<HTMLDivElement>): void {
+    (new Viz({ Module, render }))
+        .renderSVGElement(noam.fsm.printDotFormat(automaton))
         .then((svgElement) => {
-            if (target.current != null) {
-                target.current.appendChild(svgElement);
+            if (!automatonParent.current) {
+                return;
             }
+
+            while (automatonParent.current.firstChild) {
+                automatonParent.current.removeChild(automatonParent.current.firstChild);
+            }
+
+            if (automaton.transitions.length === 0) {
+                return;
+            }
+
+            automatonParent.current.appendChild(svgElement);
         })
         .catch(error => {
             console.error(error);
@@ -45,27 +58,33 @@ function generateAutomaton(expression: string, target: React.RefObject<HTMLDivEl
 }
 
 const RegularLanguage: React.FC = () => {
+    const [expression, setExpression] = useState('');
+    const [acceptStrings, setAcceptStrings] = useState('');
+    const [rejectStrings, setRejectStrings] = useState('');
 
-    const automatonRef: React.RefObject<HTMLDivElement> = React.createRef();
+    const automatonParent: React.RefObject<HTMLDivElement> = React.createRef();
 
-    const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        generateAutomaton(event.target.value, automatonRef);
-    }
+    const automaton: any = generateAutomaton(expression);
+    renderAutomaton(automaton, automatonParent);
+    testStrings(automaton, acceptStrings.split('\n'), rejectStrings.split('\n'));
 
     return (
         <Layout>
             <h1>Regular language</h1>
-            <Input size="large" placeholder="What is your regular language expression?" onChange={onChange} />
+            <Input size="large" placeholder="What is your regular language expression?"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setExpression(event.target.value)} />
             <h1>Test strings</h1>
             <div className="field accept">
                 <h2>Accept</h2>
-                <Input.TextArea rows={8} />
+                <Input.TextArea rows={8}
+                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setAcceptStrings(event.target.value)} />
             </div>
             <div className="field reject">
                 <h2>Reject</h2>
-                <Input.TextArea rows={8} />
+                <Input.TextArea rows={8}
+                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setRejectStrings(event.target.value)} />
             </div>
-            <div className="automaton" ref={automatonRef} />
+            <div className="automaton" ref={automatonParent} />
         </Layout>
     );
 }
