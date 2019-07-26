@@ -5,7 +5,7 @@
   "dependencies": {
     "@types/jest": "24.0.15",
     "@types/node": "12.6.8",
-    "@types/react": "16.8.23",
+    "@types/react": "^16.8.23",
     "@types/react-dom": "16.8.4",
     "antd": "^3.20.5",
     "noam": "git+https://github.com/izuzak/noam.git",
