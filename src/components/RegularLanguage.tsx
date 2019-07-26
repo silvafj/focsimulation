@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import {
-    Layout,
+    Dropdown,
+    Icon,
     Input,
+    Layout,
+    Menu,
     Popover,
     Tooltip,
-    Icon,
 } from 'antd';
+import { ClickParam } from "antd/lib/menu"
 
 import noam from 'noam';
 import Viz from 'viz.js';
@@ -85,7 +88,7 @@ function renderAutomaton(automaton: any, automatonParent: React.RefObject<HTMLDi
         });
 }
 
-function renderExpressionHelp(): any {
+function renderExpressionHelp() {
     const title = <span>What is a regular expression?</span>;
     const content = (
         <div>
@@ -111,7 +114,7 @@ function renderExpressionHelp(): any {
         </Popover>);
 }
 
-function renderExpressionStatus(error: any): any {
+function renderExpressionStatus(error: any) {
     if (!error) {
         return (<span></span>);
     }
@@ -123,12 +126,46 @@ function renderExpressionStatus(error: any): any {
     );
 }
 
+enum ExpressionMenuOp {
+    RANDOM = "random",
+    SIMPLIFY = "simplify",
+}
+
+function renderExpressionMenu(onClick: (param: ClickParam) => void) {
+    const menu = (
+        <Menu onClick={onClick}>
+            <Menu.Item key={ExpressionMenuOp.RANDOM}>Generate random expression</Menu.Item>
+            <Menu.Item key={ExpressionMenuOp.SIMPLIFY}>Simplify expression</Menu.Item>
+        </Menu>
+    );
+
+    return (
+        <Dropdown overlay={menu} placement="bottomRight" trigger={['click']}>
+            <Icon type="menu" />
+        </Dropdown>);
+}
+
 const RegularLanguage: React.FC = () => {
     const [expression, setExpression] = useState('');
     const [acceptWords, setAcceptWords] = useState('');
     const [rejectWords, setRejectWords] = useState('');
 
     const automatonParent: React.RefObject<HTMLDivElement> = React.createRef();
+
+    const handleExpressionMenuClick = (click: ClickParam) => {
+        switch (click.key) {
+            case ExpressionMenuOp.RANDOM: {
+                setExpression(
+                    noam.re.string.simplify(
+                        noam.re.string.random(5, "ab", {})));
+                break;
+            }
+            case ExpressionMenuOp.SIMPLIFY: {
+                setExpression(noam.re.string.simplify(expression));
+                break;
+            }
+        }
+    }
 
     const [automaton, error] = generateAutomaton(expression);
     renderAutomaton(automaton, automatonParent);
@@ -137,9 +174,12 @@ const RegularLanguage: React.FC = () => {
         <Layout>
             <h1>Expression</h1>
             <Input size="large" placeholder="Write your regular expression"
+                value={expression}
                 prefix={renderExpressionHelp()}
                 suffix={renderExpressionStatus(error)}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setExpression(event.target.value)} />
+                addonAfter={renderExpressionMenu(handleExpressionMenuClick)}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setExpression(event.target.value)}
+            />
             <h1>Words</h1>
             <div className="field accept">
                 <h2>Accept</h2>
@@ -172,6 +212,7 @@ const RegularLanguage: React.FC = () => {
                     />
                 </div>
             </div>
+            <h1>Deterministic Finite Automaton</h1>
             <div className="automaton" ref={automatonParent} />
         </Layout>
     );
