@@ -1,0 +1,12 @@
+.automaton-graph {
+    background: white;
+    margin-top: 4px;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+}
+
+.automaton-graph>svg {
+    margin: 0 auto;
+    display: block;
+}

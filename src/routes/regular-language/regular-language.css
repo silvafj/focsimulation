@@ -1,0 +1,13 @@
+.ant-layout-content .ant-layout {
+    padding: 10px;
+    overflow: hidden;
+}
+
+.ant-layout-content h1 {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.ant-layout-content .test-words.accept {
+    padding-bottom: 4px;
+}
