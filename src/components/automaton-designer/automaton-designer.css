@@ -14,26 +14,22 @@
     width: 100%;
 }
 
-.automaton-designer svg g {
+.automaton-designer svg .node {
     fill: none;
     stroke: black;
     pointer-events: bounding-box;
 }
 
-.automaton-designer svg g.dragging {
+.automaton-designer svg .node.dragging {
     cursor: move;
 }
 
-/* .automaton-designer svg g circle {
-    fill: none;
-    stroke: black;
-} */
-
-.automaton-designer svg g.selected circle {
+.automaton-designer svg .node.selected circle,
+.automaton-designer svg .node.selected polyline {
     stroke: blue;
 }
 
-.automaton-designer svg g text {
+.automaton-designer svg .node text {
     text-anchor: middle;
     font-family: Times, serif;
     font-size: 14px;
@@ -41,14 +37,20 @@
     stroke: none;
 }
 
-.automaton-designer svg g.selected text {
+.automaton-designer svg .node.selected text {
     fill: blue;
 }
 
-.automaton-designer svg g polyline {
+.automaton-designer svg .node polyline {
     stroke-width: 2;
 }
 
-.automaton-designer svg g.selected polyline {
-    stroke: blue;
+.automaton-designer svg .edge .arrow {
+    fill: black;
+    stroke: black;
+}
+
+.automaton-designer svg .edge .line {
+    fill: none;
+    stroke: black;
 }
