@@ -1,3 +1,54 @@
-svg g {
+.automaton-designer {
+    position: relative;
+    background: white;
+    margin-top: 4px;
+    min-height: 600px;
+    user-select: none;
+}
+
+.automaton-designer svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.automaton-designer svg g {
+    fill: none;
+    stroke: black;
     pointer-events: bounding-box;
+}
+
+.automaton-designer svg g.dragging {
+    cursor: move;
+}
+
+/* .automaton-designer svg g circle {
+    fill: none;
+    stroke: black;
+} */
+
+.automaton-designer svg g.selected circle {
+    stroke: blue;
+}
+
+.automaton-designer svg g text {
+    text-anchor: middle;
+    font-family: Times, serif;
+    font-size: 14px;
+    fill: black;
+    stroke: none;
+}
+
+.automaton-designer svg g.selected text {
+    fill: blue;
+}
+
+.automaton-designer svg g polyline {
+    stroke-width: 2;
+}
+
+.automaton-designer svg g.selected polyline {
+    stroke: blue;
 }

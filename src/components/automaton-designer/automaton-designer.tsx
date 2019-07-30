@@ -1,161 +1,101 @@
 import React, { useState } from 'react';
 
 import noam from 'noam';
-import Viz from 'viz.js';
-import { Module, render } from 'viz.js/full.render.js';
 
 import './automaton-designer.css';
 
-function getStateFromElement(element: SVGGElement): string {
-    return ((element.querySelector('text') as SVGTextElement).textContent as string);
-}
+const Link: React.FC<{}> = ({ }) => {
 
-function getShapeForState(fsm: any, state: string): string {
-    return noam.fsm.isAcceptingState(fsm, state) ? 'doublecircle' : 'circle';
-}
-
-function exportAsDotFormat(fsm: any) {
-    var result = ["digraph finite_state_machine {", "  rankdir=LR;"];
-
-    result.push(
-        Array.from((fsm.states as Array<string>)).map(
-            s => s + " [shape = " + getShapeForState(fsm, s) + "]"
-        ).join(";")
+    return (
+        <></>
     );
+}
 
-    if (fsm.initialState) {
-        result.push("  secret_node [style=invis, shape=point];");
-        var initStateArrow = ["  secret_node ->"];
-        initStateArrow.push(fsm.initialState.toString());
-        initStateArrow.push("[style=bold];");
-        result.push(initStateArrow.join(" "));
+const Node: React.FC<{
+    automaton: any,
+    state: string,
+    dragging: boolean,
+    selected: boolean,
+    onSelect: (state: string) => void,
+    onToggleState: (state: string) => void,
+    onDragStart: (state: string, event: React.MouseEvent) => void
+    onDragEnd: (state: string, event: React.MouseEvent) => void
+}> = ({ automaton, state, dragging, selected, onSelect, onToggleState, onDragStart, onDragEnd }) => {
+
+    const classes: Array<string> = ['node'];
+    if (dragging) {
+        classes.push('dragging');
+    }
+    if (selected) {
+        classes.push('selected');
+    }
+    if (noam.fsm.isAcceptingState(automaton, state)) {
+        classes.push('accept');
     }
 
-    var newTransitions = [];
+    const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);
+    const isInitial: boolean = (automaton.initialState === state);
 
-    var i;
-    for (i = 0; i < fsm.transitions.length; i++) {
-        var j;
-        for (j = 0; j < fsm.transitions[i].toStates.length; j++) {
-            var found = null;
-
-            var k;
-            for (k = 0; k < newTransitions.length; k++) {
-                if (noam.util.areEquivalent(newTransitions[k].fromState, fsm.transitions[i].fromState) &&
-                    noam.util.areEquivalent(newTransitions[k].toStates, [fsm.transitions[i].toStates[j]])) {
-                    found = newTransitions[k];
-                }
-            }
-
-            if (found === null) {
-                var newTransition = noam.util.clone(fsm.transitions[i]);
-                newTransition.toStates = [newTransition.toStates[j]];
-                newTransition.symbol = [newTransition.symbol];
-                newTransitions.push(newTransition);
-            } else {
-                found.symbol.push(fsm.transitions[i].symbol);
-            }
-        }
-    }
-
-    var trans;
-    for (i = 0; i < newTransitions.length; i++) {
-        if (noam.util.areEquivalent(newTransitions[i].toStates[0], fsm.initialState)) {
-            trans = [" "];
-            trans.push(newTransitions[i].toStates[0].toString());
-            trans.push("->");
-            trans.push(newTransitions[i].fromState.toString());
-            trans.push("[");
-            trans.push("label =");
-            trans.push('"' + newTransitions[i].symbol.toString() + '"');
-            trans.push(" dir = back];");
-            result.push(trans.join(" "));
-        } else {
-            trans = [" "];
-            trans.push(newTransitions[i].fromState.toString());
-            trans.push("->");
-            trans.push(newTransitions[i].toStates[0].toString());
-            trans.push("[");
-            trans.push("label =");
-            trans.push('"' + newTransitions[i].symbol.toString() + '"');
-            trans.push(" ];");
-            result.push(trans.join(" "));
-        }
-    }
-
-    result.push("}");
-
-    return result.join("\n").replace(/\$/g, "$");
+    return (
+        <g
+            className={classes.join(' ')}
+            transform={`translate(${automaton.statePositions[state].x}, ${automaton.statePositions[state].y})`}
+            onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation();
+                onSelect(state);
+            }}
+            onDoubleClick={(e) => {
+                e.stopPropagation();
+                onToggleState(state)
+            }}
+            onMouseDown={(e) => {
+                e.stopPropagation();
+                onDragStart(state, e)
+            }}
+            onMouseUp={(e) => {
+                e.stopPropagation();
+                onDragEnd(state, e)
+            }}
+        >
+            {isInitial ? <polyline points="-12,14 0,22 -12,30" /> : <></>}
+            <circle cx="22" cy="22" r="18"></circle>
+            {isAccepting ? <circle cx="22" cy="22" r="22"></circle> : <></>}
+            <text x="22" y="27">{state}</text>
+        </g>
+    );
 };
 
 export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton: any) => void }> = ({ automaton, onUpdate }) => {
-    const [dragState, setDragState] = useState('');
 
-    const automatonParent: React.RefObject<HTMLDivElement> = React.createRef();
+    const [selected, setSelected] = useState('');
+    const [dragging, setDragging] = useState('');
+    const [linking, setLinking] = useState('');
 
-    const renderAutomaton = (automaton: any, automatonParent: React.RefObject<HTMLDivElement>) => {
-        (new Viz({ Module, render }))
-            .renderSVGElement(exportAsDotFormat(automaton))
-            .then((svgElement) => {
-                if (!automatonParent.current) {
-                    return;
-                }
-
-                while (automatonParent.current.firstChild) {
-                    automatonParent.current.removeChild(automatonParent.current.firstChild);
-                }
-
-                const nodes = svgElement.querySelectorAll('.node');
-                Array.from(nodes).forEach((e) => {
-                    (e as SVGGElement).ondblclick = toggleAcceptState;
-                    (e as SVGGElement).onmousedown = dragStart;
-                    (e as SVGGElement).onmousemove = drag;
-                    (e as SVGGElement).onmouseup = dragEnd;
-                });
-
-                automatonParent.current.appendChild(svgElement);
-            })
-            .catch(error => {
-                console.error(error);
-            });
-    }
-
-    const dragStart = (e: MouseEvent) => {
-        if (!e.currentTarget) {
-            return;
-        }
-
-        const state: string = getStateFromElement((e.currentTarget as SVGGElement));
-        setDragState(state);
-    }
-
-    const drag = (e: MouseEvent) => {
-        // e.preventDefault();
-        // TODO: move SVG line around
-    }
-
-    const dragEnd = (e: MouseEvent) => {
-        if (!e.currentTarget) {
-            return;
-        }
-
-        const fromState: string = dragState;
-        const toState: string = getStateFromElement((e.currentTarget as SVGGElement));
+    const addNewState = (e: React.MouseEvent) => {
+        const state = 's' + automaton.states.length.toString();
+        setSelected(state);
 
         automaton = { ...automaton };
-        noam.fsm.addSymbol(automaton, 'a');
-        noam.fsm.addTransition(automaton, fromState, [toState], 'a');
+        noam.fsm.addState(automaton, state);
+        if (!automaton.statePositions) {
+            automaton.statePositions = [];
+        }
+
+        var rect = e.currentTarget.getBoundingClientRect();
+        automaton.statePositions[state] = {
+            x: e.clientX - rect.left - 22,
+            y: e.clientY - rect.top - 22
+        };
+
+        if (automaton.states.length === 1) {
+            noam.fsm.setInitialState(automaton, state);
+        }
 
         onUpdate(automaton);
     }
 
-    const toggleAcceptState = (e: Event) => {
-        e.stopPropagation();
-        if (!e.currentTarget) {
-            return;
-        }
-        const state = getStateFromElement(e.currentTarget as SVGGElement);
-
+    const toggleAcceptState = (state: string) => {
         automaton = { ...automaton };
         if (noam.fsm.isAcceptingState(automaton, state)) {
             automaton.acceptingStates = automaton.acceptingStates.filter((e: string) => e !== state);
@@ -166,21 +106,62 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         onUpdate(automaton);
     }
 
-    const addNewState = (e: React.MouseEvent) => {
-        const state = 's' + automaton.states.length.toString();
-
-        automaton = { ...automaton };
-        noam.fsm.addState(automaton, state);
-        if (automaton.states.length === 1) {
-            noam.fsm.setInitialState(automaton, state);
+    const dragStart = (state: string, e: React.MouseEvent) => {
+        setSelected(state);
+        if (e.shiftKey) {
+            setLinking(state);
+        } else {
+            setDragging(state);
         }
-
-        onUpdate(automaton);
     }
 
-    renderAutomaton(automaton, automatonParent);
+    const drag = (e: React.MouseEvent) => {
+        if (dragging) {
+            automaton = { ...automaton };
+            automaton.statePositions[dragging].x += e.movementX;
+            automaton.statePositions[dragging].y += e.movementY;
+            onUpdate(automaton);
+        }
+    }
+
+    const dragEnd = (state: string, e: React.MouseEvent) => {
+        if (linking) {
+            automaton = { ...automaton };
+            if (!automaton.alphabet.includes('a')) {
+                noam.fsm.addSymbol(automaton, 'a');
+            }
+            noam.fsm.addTransition(automaton, linking, [state], 'a');
+
+            onUpdate(automaton);
+        }
+
+        dragExit(e);
+    }
+
+    const dragExit = (e: React.MouseEvent) => {
+        setLinking('');
+        setDragging('');
+    }
 
     return (
-        <div className="automaton-graph" ref={automatonParent} onDoubleClick={addNewState} />
+        <div
+            className="automaton-designer"
+            onClick={(e) => setSelected('')}
+            onDoubleClick={addNewState}
+            onMouseMove={drag}
+            onMouseLeave={dragExit}
+        >
+            <svg>
+                {(automaton.states as Array<string>).map(
+                    state => <Node key={state} automaton={automaton} state={state}
+                        dragging={dragging === state}
+                        selected={selected === state}
+                        onSelect={state => setSelected(state)}
+                        onToggleState={toggleAcceptState}
+                        onDragStart={dragStart}
+                        onDragEnd={dragEnd} />
+                )}
+            </svg>
+        </div>
     );
 }
