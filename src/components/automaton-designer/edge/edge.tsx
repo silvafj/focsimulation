@@ -17,7 +17,7 @@ function getStateRadius(automaton: any, state: string): number {
     return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
 }
 
-function calculateLineMidpoint(from: Point, to: Point) {
+function calculateLineMidpoint(from: Point, to: Point): Point {
     return {
         x: (from.x + to.x) / 2,
         y: (from.y + to.y) / 2,
@@ -46,7 +46,7 @@ export const LinkingEdge: React.FC<{
     );
 
     return (
-        <Edge from={from} to={mousePosition} linking={true} text="" />
+        <Edge from={from} to={mousePosition} />
     );
 }
 
@@ -66,29 +66,35 @@ export const StateEdge: React.FC<{
     to = closestPointOnCircle(to, getStateRadius(automaton, toState), midpoint);
 
     return (
-        <Edge from={from} to={to} linking={false} text={symbol} />
+        <Edge from={from} to={to} transition={{from: fromState, to: toState, symbol: symbol}} />
     );
 }
 
 const Edge: React.FC<{
     from: Point,
     to: Point,
-    linking: boolean,
-    text: string,
-}> = ({ from, to, linking, text }) => {
+    transition?: { from: string, to: string, symbol: string }
+}> = ({ from, to, transition }) => {
 
     const midpoint = calculateLineMidpoint(from, to);
 
+    var dataProps = {};
     const classes: Array<string> = ['edge'];
-    if (linking) {
+    if (!transition) {
         classes.push('linking');
+    } else {
+        dataProps = {
+            'data-from': transition.from,
+            'data-to': transition.to,
+            'data-symbol': transition.symbol
+        };
     }
 
     return (
-        <g className={classes.join(' ')}>
+        <g className={classes.join(' ')} {...dataProps}>
             <path className="line" d={`M${from.x},${from.y}L${to.x},${to.y}`} />
             <EdgeArrow from={from} to={to} />
-            <text x={midpoint.x + 5} y={midpoint.y - 5}>{text}</text>
+            <text x={midpoint.x + 5} y={midpoint.y - 5}>{transition ? transition.symbol : ''}</text>
         </g>
     );
 }

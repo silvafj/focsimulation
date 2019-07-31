@@ -8,7 +8,6 @@ import Automata from '../../routes/automata';
 import logo from '../../assets/logo.svg';
 
 import './app.css';
-import { string } from 'prop-types';
 
 const { Header, Sider, Content } = Layout;
 
