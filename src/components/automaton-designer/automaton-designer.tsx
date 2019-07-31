@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 
 import noam from 'noam';
 
+import { Node } from '../automaton-node/automaton-node';
+import { LinkingEdge, StateEdge } from '../automaton-edge/automaton-edge';
+
 import './automaton-designer.css';
 
 function getMousePosition(e: React.MouseEvent, offsetX = 0, offsetY = 0) {
@@ -13,152 +16,6 @@ function getMousePosition(e: React.MouseEvent, offsetX = 0, offsetY = 0) {
         y: (e.clientY - CTM.f + offsetY) / CTM.d
     };
 }
-
-function getStatePosition(automaton: any, state: string, center: boolean) {
-    const position = automaton.statePositions[state];
-    return {
-        x: position.x + (center ? 22 : 0),
-        y: position.y + (center ? 22 : 0),
-    }
-}
-
-function getStateRadius(automaton: any, state: string) {
-    return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
-}
-
-function calculateLineMidpoint(from: { x: number, y: number }, to: { x: number, y: number }) {
-    return {
-        x: (from.x + to.x) / 2,
-        y: (from.y + to.y) / 2,
-    }
-}
-
-function closestPointOnCircle(circle: { x: number, y: number }, radius: number, point: { x: number, y: number }) {
-    var dx = point.x - circle.x;
-    var dy = point.y - circle.y;
-    var scale = Math.sqrt(dx * dx + dy * dy);
-    return {
-        x: circle.x + dx * radius / scale,
-        y: circle.y + dy * radius / scale,
-    };
-};
-
-const LinkingEdge: React.FC<{
-    automaton: any,
-    fromState: string,
-    mousePosition: { x: number, y: number }
-}> = ({ automaton, fromState, mousePosition }) => {
-    const from = closestPointOnCircle(
-        getStatePosition(automaton, fromState, true),
-        getStateRadius(automaton, fromState),
-        mousePosition
-    );
-
-    return (
-        <Edge from={from} to={mousePosition} linking={true} text="" />
-    );
-}
-
-const StateEdge: React.FC<{
-    automaton: any,
-    fromState: string,
-    toState: string,
-    symbol: string
-}> = ({ automaton, fromState, toState, symbol }) => {
-
-    var from = getStatePosition(automaton, fromState, true);
-    var to = getStatePosition(automaton, toState, true);
-
-    const midpoint = calculateLineMidpoint(from, to);
-
-    from = closestPointOnCircle(from, getStateRadius(automaton, fromState), midpoint);
-    to = closestPointOnCircle(to, getStateRadius(automaton, toState), midpoint);
-
-    return (
-        <Edge from={from} to={to} linking={false} text={symbol} />
-    );
-}
-
-const Edge: React.FC<{
-    from: { x: number, y: number },
-    to: { x: number, y: number },
-    linking: boolean,
-    text: string,
-}> = ({ from, to, linking, text }) => {
-
-    const midpoint = calculateLineMidpoint(from, to);
-
-    const classes: Array<string> = ['edge'];
-    if (linking) {
-        classes.push('linking');
-    }
-
-    return (
-        <g className={classes.join(' ')}>
-            <path className="line" d={`M${from.x},${from.y}L${to.x},${to.y}`} />
-            <EdgeArrow from={from} to={to} />
-            <text x={midpoint.x + 5} y={midpoint.y - 5}>{text}</text>
-        </g>
-    );
-}
-
-const EdgeArrow: React.FC<{
-    from: { x: number, y: number },
-    to: { x: number, y: number },
-}> = ({ from, to }) => {
-    const angle = Math.atan2(to.y - from.y, to.x - from.x);
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-
-    const path: Array<string> = []
-    path.push(`M${to.x},${to.y}`);
-    path.push(`L${to.x - 8 * dx + 5 * dy},${to.y - 8 * dy - 5 * dx}`);
-    path.push(` ${to.x - 8 * dx - 5 * dy},${to.y - 8 * dy + 5 * dx}`);
-
-    return (
-        <path className="arrow" d={path.join('')} />
-    );
-}
-
-const Node: React.FC<{
-    automaton: any,
-    state: string,
-    dragging: boolean,
-    selected: boolean,
-}> = ({ automaton, state, dragging, selected }) => {
-
-    const position: { x: number, y: number } = automaton.statePositions[state];
-    const translate = `translate(${position.x}, ${position.y})`;
-
-    const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);
-    const isInitial: boolean = (automaton.initialState === state);
-
-    const classes: Array<string> = ['node'];
-    if (dragging) {
-        classes.push('dragging');
-    }
-    if (selected) {
-        classes.push('selected');
-    }
-    if (noam.fsm.isAcceptingState(automaton, state)) {
-        classes.push('accept');
-    }
-
-    var initialStateArrow = null;
-    if (isInitial) {
-        const xOffset = isAccepting ? -4 : 0;
-        initialStateArrow = <polyline points={`${-8 + xOffset},14 ${2 + xOffset},22 ${-8 + xOffset},30`} />;
-    }
-
-    return (
-        <g className={classes.join(' ')} transform={translate} data-state={state}>
-            {initialStateArrow}
-            <circle cx="22" cy="22" r="18" />
-            {isAccepting ? <circle cx="22" cy="22" r="22" /> : <></>}
-            <text x="22" y="27">{state}</text>
-        </g>
-    );
-};
 
 function getStateFromElement(element: Element): any {
     if (element instanceof SVGGElement) {
@@ -315,8 +172,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     }
 
     return (
-        <div className="automaton-designer">
+        <div className="automaton-designer-container">
             <svg
+                className="automaton-designer"
                 onDoubleClick={doubleClickHandler}
                 onMouseDown={mouseDownHandler}
                 onMouseUp={mouseUpHandler}

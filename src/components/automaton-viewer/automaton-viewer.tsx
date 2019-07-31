@@ -4,7 +4,7 @@ import noam from 'noam';
 import Viz from 'viz.js';
 import { Module, render } from 'viz.js/full.render.js';
 
-import './automaton.css';
+import './automaton-viewer.css';
 
 function isValidAutomaton(automaton: any): boolean {
     return automaton && automaton.transitions.length > 0;
@@ -35,12 +35,12 @@ function renderAutomaton(automaton: any, automatonParent: React.RefObject<HTMLDi
         });
 }
 
-export const Automaton: React.FC<{ automaton: any }> = ({ automaton }) => {
+export const AutomatonViewer: React.FC<{ automaton: any }> = ({ automaton }) => {
     const automatonParent: React.RefObject<HTMLDivElement> = React.createRef();
 
     renderAutomaton(automaton, automatonParent);
 
     return (
-        <div className="automaton-graph" ref={automatonParent} />
+        <div className="automaton-viewer-container" ref={automatonParent} />
     );
 }

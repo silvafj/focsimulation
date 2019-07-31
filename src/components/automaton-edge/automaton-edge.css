@@ -1,0 +1,13 @@
+.automaton-designer .edge.linking {
+    pointer-events: none;
+}
+
+.automaton-designer .edge .arrow {
+    fill: black;
+    stroke: black;
+}
+
+.automaton-designer .edge .line {
+    fill: none;
+    stroke: black;
+}

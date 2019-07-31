@@ -12,7 +12,7 @@ import { ClickParam } from "antd/lib/menu"
 import noam from 'noam';
 
 import TestWords from '../../components/test-words';
-import Automaton from '../../components/automaton';
+import AutomatonViewer from '../../components/automaton-viewer';
 import ExpressionHelp from '../../components/regular-expression';
 
 import './regular-language.css';
@@ -91,7 +91,7 @@ export const RegularLanguage: React.FC = () => {
             <TestWords automaton={automaton} testAccept={true} />
             <TestWords automaton={automaton} testAccept={false} />
             <h1>Deterministic Finite Automaton</h1>
-            <Automaton automaton={automaton} />
+            <AutomatonViewer automaton={automaton} />
         </Layout>
     );
 }

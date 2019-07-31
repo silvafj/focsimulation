@@ -1,4 +1,4 @@
-.automaton-graph {
+.automaton-viewer-container {
     background: white;
     margin-top: 4px;
     min-height: 320px;
@@ -6,7 +6,7 @@
     align-items: center;
 }
 
-.automaton-graph>svg {
+.automaton-viewer-container>svg {
     margin: 0 auto;
     display: block;
 }
