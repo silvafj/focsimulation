@@ -1,8 +1,9 @@
 import React from 'react';
-
 import noam from 'noam';
 
-import './automaton-node.css';
+import { Point } from '../../../utils/types';
+
+import './node.css';
 
 export const Node: React.FC<{
     automaton: any,
@@ -11,7 +12,7 @@ export const Node: React.FC<{
     selected: boolean,
 }> = ({ automaton, state, dragging, selected }) => {
 
-    const position: { x: number, y: number } = automaton.statePositions[state];
+    const position: Point = automaton.statePositions[state];
     const translate = `translate(${position.x}, ${position.y})`;
 
     const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);

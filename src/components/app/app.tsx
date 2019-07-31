@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Menu } from 'antd';
-import { BrowserRouter, Route, Link, withRouter } from "react-router-dom";
+import { BrowserRouter, Route, Link, withRouter } from 'react-router-dom';
 
 import RegularLanguage from '../../routes/regular-language';
 import Automata from '../../routes/automata';

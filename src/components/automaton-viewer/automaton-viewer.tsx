@@ -1,5 +1,4 @@
 import React from 'react';
-
 import noam from 'noam';
 import Viz from 'viz.js';
 import { Module, render } from 'viz.js/full.render.js';

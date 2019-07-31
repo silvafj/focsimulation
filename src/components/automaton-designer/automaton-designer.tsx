@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-
 import noam from 'noam';
 
-import { Node } from '../automaton-node/automaton-node';
-import { LinkingEdge, StateEdge } from '../automaton-edge/automaton-edge';
+import { LinkingEdge, StateEdge } from './edge/edge';
+import { Node } from './node/node';
+import { Point } from '../../utils/types';
 
 import './automaton-designer.css';
 
-function getMousePosition(e: React.MouseEvent, offsetX = 0, offsetY = 0) {
+function getMousePosition(e: React.MouseEvent, offset: Point = { x: 0, y: 0 }): Point {
     const svg = e.currentTarget as SVGSVGElement;
     const CTM = svg.getScreenCTM() as DOMMatrix;
 
     return {
-        x: (e.clientX - CTM.e + offsetX) / CTM.a,
-        y: (e.clientY - CTM.f + offsetY) / CTM.d
+        x: (e.clientX - CTM.e + offset.x) / CTM.a,
+        y: (e.clientY - CTM.f + offset.y) / CTM.d
     };
 }
 
-function getStateFromElement(element: Element): any {
+function getStateFromElement(element: Element): string | null {
     if (element instanceof SVGGElement) {
-        return element.dataset.state;
+        return element.dataset.state || null;
     } else if (element.parentElement instanceof SVGGElement) {
         return getStateFromElement(element.parentElement);
     } else {
@@ -87,7 +87,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                 automaton.statePositions = [];
             }
 
-            automaton.statePositions[state] = getMousePosition(e, -22, -22);
+            automaton.statePositions[state] = getMousePosition(e, { x: -22, y: -22 });
 
             if (automaton.states.length === 1) {
                 noam.fsm.setInitialState(automaton, state);
@@ -111,10 +111,11 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
             switch (draggingMode) {
                 case DraggingMode.DRAGGING:
                     // Store an offset
-                    var position = getMousePosition(e);
-                    position.x = automaton.statePositions[selected].x - position.x;
-                    position.y = automaton.statePositions[selected].y - position.y;
-                    setCoordinates(position);
+                    const position = getMousePosition(e);
+                    setCoordinates({
+                        x: automaton.statePositions[selected].x - position.x,
+                        y: automaton.statePositions[selected].y - position.y
+                    });
                     break;
                 case DraggingMode.LINKING:
                     setCoordinates(getMousePosition(e));
@@ -128,7 +129,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
             case DraggingMode.DRAGGING:
                 automaton = { ...automaton };
 
-                automaton.statePositions[selected] = getMousePosition(e, coordinates.x, coordinates.y);
+                automaton.statePositions[selected] = getMousePosition(e, coordinates);
 
                 onUpdate(automaton);
                 break;

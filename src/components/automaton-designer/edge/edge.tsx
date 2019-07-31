@@ -1,10 +1,11 @@
 import React from 'react';
-
 import noam from 'noam';
 
-import './automaton-edge.css';
+import { Point } from '../../../utils/types';
 
-function getStatePosition(automaton: any, state: string, center: boolean) {
+import './edge.css';
+
+function getStatePosition(automaton: any, state: string, center: boolean): Point {
     const position = automaton.statePositions[state];
     return {
         x: position.x + (center ? 22 : 0),
@@ -12,18 +13,18 @@ function getStatePosition(automaton: any, state: string, center: boolean) {
     }
 }
 
-function getStateRadius(automaton: any, state: string) {
+function getStateRadius(automaton: any, state: string): number {
     return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
 }
 
-function calculateLineMidpoint(from: { x: number, y: number }, to: { x: number, y: number }) {
+function calculateLineMidpoint(from: Point, to: Point) {
     return {
         x: (from.x + to.x) / 2,
         y: (from.y + to.y) / 2,
     }
 }
 
-function closestPointOnCircle(circle: { x: number, y: number }, radius: number, point: { x: number, y: number }) {
+function closestPointOnCircle(circle: Point, radius: number, point: Point): Point {
     var dx = point.x - circle.x;
     var dy = point.y - circle.y;
     var scale = Math.sqrt(dx * dx + dy * dy);
@@ -36,7 +37,7 @@ function closestPointOnCircle(circle: { x: number, y: number }, radius: number, 
 export const LinkingEdge: React.FC<{
     automaton: any,
     fromState: string,
-    mousePosition: { x: number, y: number }
+    mousePosition: Point
 }> = ({ automaton, fromState, mousePosition }) => {
     const from = closestPointOnCircle(
         getStatePosition(automaton, fromState, true),
@@ -70,8 +71,8 @@ export const StateEdge: React.FC<{
 }
 
 const Edge: React.FC<{
-    from: { x: number, y: number },
-    to: { x: number, y: number },
+    from: Point,
+    to: Point,
     linking: boolean,
     text: string,
 }> = ({ from, to, linking, text }) => {
@@ -93,8 +94,8 @@ const Edge: React.FC<{
 }
 
 const EdgeArrow: React.FC<{
-    from: { x: number, y: number },
-    to: { x: number, y: number },
+    from: Point,
+    to: Point,
 }> = ({ from, to }) => {
     const angle = Math.atan2(to.y - from.y, to.x - from.x);
     const dx = Math.cos(angle);
