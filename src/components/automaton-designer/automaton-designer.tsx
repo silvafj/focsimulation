@@ -14,57 +14,102 @@ function getMousePosition(e: React.MouseEvent, offsetX = 0, offsetY = 0) {
     };
 }
 
-function closestPointOnCircle(nX: number, nY: number, nR: number, x: number, y: number) {
-    var dx = x - nX;
-    var dy = y - nY;
+function getStatePosition(automaton: any, state: string, center: boolean) {
+    const position = automaton.statePositions[state];
+    return {
+        x: position.x + (center ? 22 : 0),
+        y: position.y + (center ? 22 : 0),
+    }
+}
+
+function getStateRadius(automaton: any, state: string) {
+    return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
+}
+
+function closestPointOnCircle(circle: { x: number, y: number }, radius: number, point: { x: number, y: number }) {
+    var dx = point.x - circle.x;
+    var dy = point.y - circle.y;
     var scale = Math.sqrt(dx * dx + dy * dy);
     return {
-        fromX: nX + dx * nR / scale,
-        fromY: nY + dy * nR / scale,
+        x: circle.x + dx * radius / scale,
+        y: circle.y + dy * radius / scale,
     };
 };
 
-
-const Edge: React.FC<{
+const LinkingEdge: React.FC<{
     automaton: any,
     fromState: string,
-    toState?: string,
-    mouseX?: number,
-    mouseY?: number,
-    symbol?: string
-}> = ({ automaton, fromState, toState, mouseX, mouseY, symbol }) => {
+    mousePosition: { x: number, y: number }
+}> = ({ automaton, fromState, mousePosition }) => {
+    const from = closestPointOnCircle(
+        getStatePosition(automaton, fromState, true),
+        getStateRadius(automaton, fromState),
+        mousePosition
+    );
 
-    const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, fromState);
+    return (
+        <Edge from={from} to={mousePosition} linking={true} text="" />
+    );
+}
 
-    const toX: number = mouseX ? mouseX : (toState ? automaton.statePositions[toState].x : 0);
-    const toY: number = mouseY ? mouseY : (toState ? automaton.statePositions[toState].y : 0);
-    const radius: number = isAccepting ? 22 : 18;
+const StateEdge: React.FC<{
+    automaton: any,
+    fromState: string,
+    toState: string,
+    symbol: string
+}> = ({ automaton, fromState, toState, symbol }) => {
 
-    const { fromX, fromY } = closestPointOnCircle(
-        automaton.statePositions[fromState].x + 22,
-        automaton.statePositions[fromState].y + 22,
-        radius, toX, toY);
+    var from = getStatePosition(automaton, fromState, true);
+    var to = getStatePosition(automaton, toState, true);
 
-
-    const arrow = (x: number, y: number, angle: number) => {
-        const dx = Math.cos(angle);
-        const dy = Math.sin(angle);
-
-        return (
-            <path className="arrow" d={`M${x},${y}L${x - 8 * dx + 5 * dy},${y - 8 * dy - 5 * dx} ${x - 8 * dx - 5 * dy},${y - 8 * dy + 5 * dx}`}></path>
-        );
+    const mid = {
+        x: (from.x + to.x) / 2,
+        y: (from.y + to.y) / 2,
     }
 
+    from = closestPointOnCircle(from, getStateRadius(automaton, fromState), mid);
+    to = closestPointOnCircle(to, getStateRadius(automaton, toState), mid);
+
+
+    return (
+        <Edge from={from} to={to} linking={false} text={symbol} />
+    );
+}
+
+const Edge: React.FC<{
+    from: { x: number, y: number },
+    to: { x: number, y: number },
+    linking: boolean,
+    text: string,
+}> = ({ from, to, linking, text }) => {
     const classes: Array<string> = ['edge'];
-    if (!toState) {
+    if (linking) {
         classes.push('linking');
     }
 
     return (
         <g className={classes.join(' ')}>
-            <path className="line" d={`M${fromX},${fromY}L${toX},${toY}`}></path>
-            {arrow(toX, toY, Math.atan2(toY - fromY, toX - fromX))}
+            <path className="line" d={`M${from.x},${from.y}L${to.x},${to.y}`} />
+            <EdgeArrow from={from} to={to} />
         </g>
+    );
+}
+
+const EdgeArrow: React.FC<{
+    from: { x: number, y: number },
+    to: { x: number, y: number },
+}> = ({ from, to }) => {
+    const angle = Math.atan2(to.y - from.y, to.x - from.x);
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+
+    const path: Array<string> = []
+    path.push(`M${to.x},${to.y}`);
+    path.push(`L${to.x - 8 * dx + 5 * dy},${to.y - 8 * dy - 5 * dx}`);
+    path.push(` ${to.x - 8 * dx - 5 * dy},${to.y - 8 * dy + 5 * dx}`);
+
+    return (
+        <path className="arrow" d={path.join('')} />
     );
 }
 
@@ -101,8 +146,8 @@ const Node: React.FC<{
     return (
         <g className={classes.join(' ')} transform={translate} data-state={state}>
             {initialStateArrow}
-            <circle cx="22" cy="22" r="18"></circle>
-            {isAccepting ? <circle cx="22" cy="22" r="22"></circle> : <></>}
+            <circle cx="22" cy="22" r="18" />
+            {isAccepting ? <circle cx="22" cy="22" r="22" /> : <></>}
             <text x="22" y="27">{state}</text>
         </g>
     );
@@ -225,9 +270,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         setDraggingMode(DraggingMode.NONE);
     }
 
-    var edge = <></>;
+    var linkingEdge = null;
     if (draggingMode === DraggingMode.LINKING) {
-        edge = <Edge automaton={automaton} fromState={selected} mouseX={coordinates.x} mouseY={coordinates.y} />;
+        linkingEdge = <LinkingEdge automaton={automaton} fromState={selected} mousePosition={coordinates} />;
     }
 
     const originalTransitions = automaton.transitions as Array<{ fromState: string, toStates: Array<string>, symbol: string }>;
@@ -236,7 +281,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         for (var toState of transition.toStates) {
             const key: string = transition.fromState + '-' + toState + '-' + transition.symbol;
             transitions.push(
-                <Edge key={key} automaton={automaton} fromState={transition.fromState} toState={toState} symbol={transition.symbol} />
+                <StateEdge key={key} automaton={automaton} fromState={transition.fromState} toState={toState} symbol={transition.symbol} />
             );
         }
     }
@@ -258,7 +303,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                         selected={selected === state} />
                 )}
                 {transitions}
-                {edge}
+                {linkingEdge}
             </svg>
         </div>
     );
