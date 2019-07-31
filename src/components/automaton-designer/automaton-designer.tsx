@@ -4,11 +4,13 @@ import noam from 'noam';
 
 import './automaton-designer.css';
 
-function relativePositionToElement(target: Element, x: number, y: number) {
-    const rect = target.getBoundingClientRect();
+function getMousePosition(e: React.MouseEvent, offsetX = 0, offsetY = 0) {
+    const svg = e.currentTarget as SVGSVGElement;
+    const CTM = svg.getScreenCTM() as DOMMatrix;
+
     return {
-        x: x - rect.left,
-        y: y - rect.top
+        x: (e.clientX - CTM.e + offsetX) / CTM.a,
+        y: (e.clientY - CTM.f + offsetY) / CTM.d
     };
 }
 
@@ -53,8 +55,13 @@ const Edge: React.FC<{
         );
     }
 
+    const classes: Array<string> = ['edge'];
+    if (!toState) {
+        classes.push('linking');
+    }
+
     return (
-        <g className="edge">
+        <g className={classes.join(' ')}>
             <path className="line" d={`M${fromX},${fromY}L${toX},${toY}`}></path>
             {arrow(toX, toY, Math.atan2(toY - fromY, toX - fromX))}
         </g>
@@ -66,11 +73,7 @@ const Node: React.FC<{
     state: string,
     dragging: boolean,
     selected: boolean,
-    onSelect: (state: string) => void,
-    onToggleState: (state: string) => void,
-    onDragStart: (state: string, event: React.MouseEvent) => void
-    onDragEnd: (state: string, event: React.MouseEvent) => void
-}> = ({ automaton, state, dragging, selected, onSelect, onToggleState, onDragStart, onDragEnd }) => {
+}> = ({ automaton, state, dragging, selected }) => {
 
     const classes: Array<string> = ['node'];
     if (dragging) {
@@ -86,29 +89,15 @@ const Node: React.FC<{
     const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);
     const isInitial: boolean = (automaton.initialState === state);
 
+
+
     return (
         <g
             className={classes.join(' ')}
             transform={`translate(${automaton.statePositions[state].x}, ${automaton.statePositions[state].y})`}
-            onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation();
-                onSelect(state);
-            }}
-            onDoubleClick={(e) => {
-                e.stopPropagation();
-                onToggleState(state)
-            }}
-            onMouseDown={(e) => {
-                e.stopPropagation();
-                onDragStart(state, e)
-            }}
-            onMouseUp={(e) => {
-                e.stopPropagation();
-                onDragEnd(state, e)
-            }}
+            data-state={state}
         >
-            {isInitial ? <polyline points="-12,14 0,22 -12,30" /> : <></>}
+            {isInitial ? <polyline points="-12,14 -2,22 -12,30" /> : <></>}
             <circle cx="22" cy="22" r="18"></circle>
             {isAccepting ? <circle cx="22" cy="22" r="22"></circle> : <></>}
             <text x="22" y="27">{state}</text>
@@ -116,88 +105,126 @@ const Node: React.FC<{
     );
 };
 
+function getStateFromElement(element: Element): any {
+    if (element instanceof SVGGElement) {
+        return element.dataset.state;
+    } else if (element.parentElement instanceof SVGGElement) {
+        return getStateFromElement(element.parentElement);
+    } else {
+        return null;
+    }
+}
+
+enum DraggingMode {
+    NONE,
+    DRAGGING,
+    LINKING,
+}
+
 export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton: any) => void }> = ({ automaton, onUpdate }) => {
 
-    const [selected, setSelected] = useState('');
-    const [dragging, setDragging] = useState('');
-    const [linking, setLinking] = useState('');
+    const [selected, setSelected] = useState();
+    const [draggingMode, setDraggingMode] = useState(DraggingMode.NONE);
     const [coordinates, setCoordinates] = useState({ x: 0, y: 0 });
 
-    const addNewState = (e: React.MouseEvent) => {
-        const state = 's' + automaton.states.length.toString();
-        setSelected(state);
-
+    const doubleClickHandler = (e: React.MouseEvent) => {
+        const element = e.target as Element;
         automaton = { ...automaton };
-        noam.fsm.addState(automaton, state);
-        if (!automaton.statePositions) {
-            automaton.statePositions = [];
+
+        var state = getStateFromElement(element);
+        if (state) {
+            if (noam.fsm.isAcceptingState(automaton, state)) {
+                automaton.acceptingStates = automaton.acceptingStates.filter((e: string) => e !== state);
+            } else {
+                noam.fsm.addAcceptingState(automaton, state);
+            }
+        } else {
+            state = 's' + automaton.states.length.toString();
+
+            noam.fsm.addState(automaton, state);
+            if (!automaton.statePositions) {
+                automaton.statePositions = [];
+            }
+
+            automaton.statePositions[state] = getMousePosition(e, -22, -22);
+
+            if (automaton.states.length === 1) {
+                noam.fsm.setInitialState(automaton, state);
+            }
         }
 
-        automaton.statePositions[state] = relativePositionToElement(e.currentTarget, e.clientX - 22, e.clientY - 22);
-
-        if (automaton.states.length === 1) {
-            noam.fsm.setInitialState(automaton, state);
-        }
-
+        setSelected(state);
         onUpdate(automaton);
     }
 
-    const toggleAcceptState = (state: string) => {
-        automaton = { ...automaton };
-        if (noam.fsm.isAcceptingState(automaton, state)) {
-            automaton.acceptingStates = automaton.acceptingStates.filter((e: string) => e !== state);
-        } else {
-            noam.fsm.addAcceptingState(automaton, state);
-        }
+    const mouseDownHandler = (e: React.MouseEvent) => {
+        const element = e.target as Element;
 
-        onUpdate(automaton);
-    }
+        const selected = getStateFromElement(element);
+        setSelected(selected);
 
-    const dragStart = (state: string, e: React.MouseEvent) => {
-        setSelected(state);
-        if (e.shiftKey) {
-            setLinking(state);
-            if (e.currentTarget) {
-                setCoordinates(relativePositionToElement(e.currentTarget, e.clientX, e.clientY));
+        if (selected) {
+            const draggingMode = e.shiftKey ? DraggingMode.LINKING : DraggingMode.DRAGGING;
+            setDraggingMode(draggingMode);
+
+            switch (draggingMode) {
+                case DraggingMode.DRAGGING:
+                    // Store an offset
+                    var position = getMousePosition(e);
+                    position.x = automaton.statePositions[selected].x - position.x;
+                    position.y = automaton.statePositions[selected].y - position.y;
+                    setCoordinates(position);
+                    break;
+                case DraggingMode.LINKING:
+                    setCoordinates(getMousePosition(e));
+                    break;
             }
-        } else {
-            setDragging(state);
         }
     }
 
-    const drag = (e: React.MouseEvent) => {
-        if (dragging) {
-            automaton = { ...automaton };
-            automaton.statePositions[dragging].x += e.movementX;
-            automaton.statePositions[dragging].y += e.movementY;
-            onUpdate(automaton);
-        } else if (linking) {
-            setCoordinates(relativePositionToElement(e.currentTarget, e.clientX + 5, e.clientY + 5));
+    const mouseMoveHandler = (e: React.MouseEvent) => {
+        switch (draggingMode) {
+            case DraggingMode.DRAGGING:
+                automaton = { ...automaton };
+
+                automaton.statePositions[selected] = getMousePosition(e, coordinates.x, coordinates.y);
+
+                onUpdate(automaton);
+                break;
+
+            case DraggingMode.LINKING:
+                setCoordinates(getMousePosition(e));
+                break;
         }
     }
 
-    const dragEnd = (state: string, e: React.MouseEvent) => {
-        if (linking) {
-            automaton = { ...automaton };
-            if (!automaton.alphabet.includes('a')) {
-                noam.fsm.addSymbol(automaton, 'a');
+    const mouseUpHandler = (e: React.MouseEvent) => {
+        const element = e.target as Element;
+
+        if (draggingMode === DraggingMode.LINKING) {
+            const toState = getStateFromElement(element);
+
+            if (toState) {
+                automaton = { ...automaton };
+                if (!automaton.alphabet.includes('a')) {
+                    noam.fsm.addSymbol(automaton, 'a');
+                }
+                noam.fsm.addTransition(automaton, selected, [toState], 'a');
+
+                onUpdate(automaton);
             }
-            noam.fsm.addTransition(automaton, linking, [state], 'a');
-
-            onUpdate(automaton);
         }
 
-        dragExit(e);
+        setDraggingMode(DraggingMode.NONE);
     }
 
-    const dragExit = (e: React.MouseEvent) => {
-        setLinking('');
-        setDragging('');
+    const mouseLeaveHandler = (e: React.MouseEvent) => {
+        setDraggingMode(DraggingMode.NONE);
     }
 
     var edge = <></>;
-    if (linking) {
-        edge = <Edge automaton={automaton} fromState={linking} mouseX={coordinates.x} mouseY={coordinates.y} />;
+    if (draggingMode === DraggingMode.LINKING) {
+        edge = <Edge automaton={automaton} fromState={selected} mouseX={coordinates.x} mouseY={coordinates.y} />;
     }
 
     const originalTransitions = automaton.transitions as Array<{ fromState: string, toStates: Array<string>, symbol: string }>;
@@ -212,22 +239,20 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     }
 
     return (
-        <div
-            className="automaton-designer"
-            onClick={(e) => setSelected('')}
-            onDoubleClick={addNewState}
-            onMouseMove={drag}
-            onMouseLeave={dragExit}
-        >
-            <svg>
+        <div className="automaton-designer">
+            <svg
+                onDoubleClick={doubleClickHandler}
+                onMouseDown={mouseDownHandler}
+                onMouseUp={mouseUpHandler}
+                onMouseLeave={mouseLeaveHandler}
+                onMouseMove={mouseMoveHandler}
+            >
                 {(automaton.states as Array<string>).map(
-                    state => <Node key={state} automaton={automaton} state={state}
-                        dragging={dragging === state}
-                        selected={selected === state}
-                        onSelect={state => setSelected(state)}
-                        onToggleState={toggleAcceptState}
-                        onDragStart={dragStart}
-                        onDragEnd={dragEnd} />
+                    state => <Node key={state}
+                        automaton={automaton}
+                        state={state}
+                        dragging={selected === state && draggingMode === DraggingMode.DRAGGING}
+                        selected={selected === state} />
                 )}
                 {transitions}
                 {edge}

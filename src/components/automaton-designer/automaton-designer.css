@@ -45,6 +45,10 @@
     stroke-width: 2;
 }
 
+.automaton-designer svg .edge.linking {
+    pointer-events: none;
+}
+
 .automaton-designer svg .edge .arrow {
     fill: black;
     stroke: black;
