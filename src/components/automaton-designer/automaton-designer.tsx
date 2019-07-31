@@ -26,6 +26,13 @@ function getStateRadius(automaton: any, state: string) {
     return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
 }
 
+function calculateLineMidpoint(from: { x: number, y: number }, to: { x: number, y: number }) {
+    return {
+        x: (from.x + to.x) / 2,
+        y: (from.y + to.y) / 2,
+    }
+}
+
 function closestPointOnCircle(circle: { x: number, y: number }, radius: number, point: { x: number, y: number }) {
     var dx = point.x - circle.x;
     var dy = point.y - circle.y;
@@ -62,14 +69,10 @@ const StateEdge: React.FC<{
     var from = getStatePosition(automaton, fromState, true);
     var to = getStatePosition(automaton, toState, true);
 
-    const mid = {
-        x: (from.x + to.x) / 2,
-        y: (from.y + to.y) / 2,
-    }
+    const midpoint = calculateLineMidpoint(from, to);
 
-    from = closestPointOnCircle(from, getStateRadius(automaton, fromState), mid);
-    to = closestPointOnCircle(to, getStateRadius(automaton, toState), mid);
-
+    from = closestPointOnCircle(from, getStateRadius(automaton, fromState), midpoint);
+    to = closestPointOnCircle(to, getStateRadius(automaton, toState), midpoint);
 
     return (
         <Edge from={from} to={to} linking={false} text={symbol} />
@@ -82,6 +85,9 @@ const Edge: React.FC<{
     linking: boolean,
     text: string,
 }> = ({ from, to, linking, text }) => {
+
+    const midpoint = calculateLineMidpoint(from, to);
+
     const classes: Array<string> = ['edge'];
     if (linking) {
         classes.push('linking');
@@ -91,6 +97,7 @@ const Edge: React.FC<{
         <g className={classes.join(' ')}>
             <path className="line" d={`M${from.x},${from.y}L${to.x},${to.y}`} />
             <EdgeArrow from={from} to={to} />
+            <text x={midpoint.x + 5} y={midpoint.y - 5}>{text}</text>
         </g>
     );
 }
@@ -167,6 +174,35 @@ enum DraggingMode {
     NONE,
     DRAGGING,
     LINKING,
+}
+
+function groupByTransitions(transitions: Array<{ fromState: string, toStates: Array<string>, symbol: string }>):
+    Array<{ fromState: string, toState: string, symbols: Array<string> }> {
+
+    const unpacked = []
+    for (var transition of transitions) {
+        for (var toState of transition.toStates) {
+            unpacked.push({
+                fromState: transition.fromState,
+                toState: toState,
+                symbol: transition.symbol
+            });
+        }
+    }
+
+    return Array.from(
+        unpacked.reduce((acc, t) => {
+            const key = t.fromState + '-' + t.toState;
+
+            const item: { fromState: string, toState: string, symbols: Array<string> } = acc.get(key) || {
+                fromState: t.fromState,
+                toState: t.toState,
+                symbols: []
+            };
+
+            item.symbols.push(t.symbol);
+            return acc.set(key, item);
+        }, new Map<string, { fromState: string, toState: string, symbols: Array<string> }>()).values());
 }
 
 export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton: any) => void }> = ({ automaton, onUpdate }) => {
@@ -253,13 +289,16 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
             const toState = getStateFromElement(element);
 
             if (toState) {
-                automaton = { ...automaton };
-                if (!automaton.alphabet.includes('a')) {
-                    noam.fsm.addSymbol(automaton, 'a');
-                }
-                noam.fsm.addTransition(automaton, selected, [toState], 'a');
+                const symbol = prompt("What is the transition character?");
+                if (symbol) {
+                    automaton = { ...automaton };
+                    if (!automaton.alphabet.includes(symbol)) {
+                        noam.fsm.addSymbol(automaton, symbol);
+                    }
+                    noam.fsm.addTransition(automaton, selected, [toState], symbol);
 
-                onUpdate(automaton);
+                    onUpdate(automaton);
+                }
             }
         }
 
@@ -273,17 +312,6 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     var linkingEdge = null;
     if (draggingMode === DraggingMode.LINKING) {
         linkingEdge = <LinkingEdge automaton={automaton} fromState={selected} mousePosition={coordinates} />;
-    }
-
-    const originalTransitions = automaton.transitions as Array<{ fromState: string, toStates: Array<string>, symbol: string }>;
-    var transitions = [];
-    for (var transition of originalTransitions) {
-        for (var toState of transition.toStates) {
-            const key: string = transition.fromState + '-' + toState + '-' + transition.symbol;
-            transitions.push(
-                <StateEdge key={key} automaton={automaton} fromState={transition.fromState} toState={toState} symbol={transition.symbol} />
-            );
-        }
     }
 
     return (
@@ -302,7 +330,10 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                         dragging={selected === state && draggingMode === DraggingMode.DRAGGING}
                         selected={selected === state} />
                 )}
-                {transitions}
+                {groupByTransitions(automaton.transitions).map(
+                    t => <StateEdge key={`${t.fromState}-${t.toState}`} automaton={automaton}
+                        fromState={t.fromState} toState={t.toState} symbol={t.symbols.join(',')} />
+                )}
                 {linkingEdge}
             </svg>
         </div>
