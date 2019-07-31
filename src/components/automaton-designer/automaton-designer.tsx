@@ -75,6 +75,12 @@ const Node: React.FC<{
     selected: boolean,
 }> = ({ automaton, state, dragging, selected }) => {
 
+    const position: { x: number, y: number } = automaton.statePositions[state];
+    const translate = `translate(${position.x}, ${position.y})`;
+
+    const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);
+    const isInitial: boolean = (automaton.initialState === state);
+
     const classes: Array<string> = ['node'];
     if (dragging) {
         classes.push('dragging');
@@ -86,18 +92,15 @@ const Node: React.FC<{
         classes.push('accept');
     }
 
-    const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);
-    const isInitial: boolean = (automaton.initialState === state);
-
-
+    var initialStateArrow = null;
+    if (isInitial) {
+        const xOffset = isAccepting ? -4 : 0;
+        initialStateArrow = <polyline points={`${-8 + xOffset},14 ${2 + xOffset},22 ${-8 + xOffset},30`} />;
+    }
 
     return (
-        <g
-            className={classes.join(' ')}
-            transform={`translate(${automaton.statePositions[state].x}, ${automaton.statePositions[state].y})`}
-            data-state={state}
-        >
-            {isInitial ? <polyline points="-12,14 -2,22 -12,30" /> : <></>}
+        <g className={classes.join(' ')} transform={translate} data-state={state}>
+            {initialStateArrow}
             <circle cx="22" cy="22" r="18"></circle>
             {isAccepting ? <circle cx="22" cy="22" r="22"></circle> : <></>}
             <text x="22" y="27">{state}</text>
