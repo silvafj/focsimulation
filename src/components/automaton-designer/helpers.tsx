@@ -36,6 +36,14 @@ export function getTransitionFromElement(element: Element): { from: string, to: 
     }
 }
 
+export function getStatePosition(automaton: any, state: string): Point {
+    const position = automaton.statePositions[state];
+    return {
+        x: position.x + 22,
+        y: position.y + 22,
+    }
+}
+
 export function updateTransitions(
     automaton: any,
     transition: { from: string, to: string, symbol: string },

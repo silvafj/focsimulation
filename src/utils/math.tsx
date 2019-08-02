@@ -14,7 +14,7 @@ export type Circle = {
  * 
  * @param number 
  */
-export function fixed(n: number): string {
+export function fixed(number: number): string {
     return number.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 }
 

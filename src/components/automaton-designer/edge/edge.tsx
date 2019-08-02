@@ -1,17 +1,18 @@
 import React from 'react';
 import noam from 'noam';
 
-import { Point, fixed, midpoint, closestPointOnCircle, angleOfLine } from '../../../utils/math';
+import {
+    getStatePosition,
+} from '../helpers';
+import {
+    Point,
+    fixed,
+    midpoint,
+    closestPointOnCircle,
+    angleOfLine,
+} from '../../../utils/math';
 
 import './edge.css';
-
-function getStatePosition(automaton: any, state: string): Point {
-    const position = automaton.statePositions[state];
-    return {
-        x: position.x + 22,
-        y: position.y + 22,
-    }
-}
 
 function getStateRadius(automaton: any, state: string): number {
     return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
@@ -69,10 +70,9 @@ export const Edge: React.FC<{
         arrow = <EdgeArrow point={to} angle={Math.atan2(to.y - from.y, to.x - from.x)} />;
 
         var textAngle = Math.atan2(to.x - from.x, from.y - to.y);
-        // textAngle = textAngle - lineAngleAdjust; TODO: fix this
         label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
     } else {
-        const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : 90; // TODO: fix this
+        const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : automaton.transitionAngles[`${fromState}-${toState}`];
         const stuff = getEndPointsAndCircle(from, fromRadius, anchorAngle);
 
         if (stuff.endAngle < stuff.startAngle) {

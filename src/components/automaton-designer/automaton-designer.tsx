@@ -7,11 +7,12 @@ import {
     DraggingMode,
     getStateFromElement,
     getMousePosition,
+    getStatePosition,
     getTransitionFromElement,
     groupByTransitions,
     updateTransitions
 } from './helpers';
-import { Point } from '../../utils/math';
+import { Point, angleOfLine } from '../../utils/math';
 
 import './automaton-designer.css';
 
@@ -115,6 +116,12 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                 const symbol = prompt("What is the transition symbol?");
                 automaton = { ...automaton };
                 automaton = updateTransitions(automaton, { from: selected, to: toState, symbol: '' }, symbol || '');
+
+                if (!automaton.transitionAngles) {
+                    automaton.transitionAngles = [];
+                }
+                automaton.transitionAngles[`${selected}-${toState}`] = angleOfLine(getStatePosition(automaton, selected), getMousePosition(e));
+
                 onUpdate(automaton);
             }
         }
@@ -137,7 +144,6 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     }
 
     /* TODO:
-       * self link - transition to same state
        * ability to select edges
        * curved links - to organise them better in the screen
        * del (key) - to delete elements (nodes and/or edges)
