@@ -1,15 +1,15 @@
 import React from 'react';
 import noam from 'noam';
 
-import { Point } from '../../../utils/types';
+import { Point, fixed, midpoint, closestPointOnCircle, angleOfLine } from '../../../utils/math';
 
 import './edge.css';
 
-function getStatePosition(automaton: any, state: string, center: boolean): Point {
+function getStatePosition(automaton: any, state: string): Point {
     const position = automaton.statePositions[state];
     return {
-        x: position.x + (center ? 22 : 0),
-        y: position.y + (center ? 22 : 0),
+        x: position.x + 22,
+        y: position.y + 22,
     }
 }
 
@@ -17,102 +17,150 @@ function getStateRadius(automaton: any, state: string): number {
     return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
 }
 
-function calculateLineMidpoint(from: Point, to: Point): Point {
+function getEndPointsAndCircle(circle: Point, radius: number, anchorAngle: number) {
+    var circleX = circle.x + 1.5 * radius * Math.cos(anchorAngle);
+    var circleY = circle.y + 1.5 * radius * Math.sin(anchorAngle);
+    var circleRadius = 0.75 * radius;
+    var startAngle = anchorAngle - Math.PI * 0.8;
+    var endAngle = anchorAngle + Math.PI * 0.8;
+    var startX = circleX + circleRadius * Math.cos(startAngle);
+    var startY = circleY + circleRadius * Math.sin(startAngle);
+    var endX = circleX + circleRadius * Math.cos(endAngle);
+    var endY = circleY + circleRadius * Math.sin(endAngle);
     return {
-        x: (from.x + to.x) / 2,
-        y: (from.y + to.y) / 2,
-    }
-}
-
-function closestPointOnCircle(circle: Point, radius: number, point: Point): Point {
-    var dx = point.x - circle.x;
-    var dy = point.y - circle.y;
-    var scale = Math.sqrt(dx * dx + dy * dy);
-    return {
-        x: circle.x + dx * radius / scale,
-        y: circle.y + dy * radius / scale,
+        startX: startX,
+        startY: startY,
+        endX: endX,
+        endY: endY,
+        startAngle: startAngle,
+        endAngle: endAngle,
+        circleX: circleX,
+        circleY: circleY,
+        circleRadius: circleRadius
     };
 };
 
-export const LinkingEdge: React.FC<{
+export const Edge: React.FC<{
     automaton: any,
     fromState: string,
-    mousePosition: Point
-}> = ({ automaton, fromState, mousePosition }) => {
-    const from = closestPointOnCircle(
-        getStatePosition(automaton, fromState, true),
-        getStateRadius(automaton, fromState),
-        mousePosition
-    );
+    toState?: string | null,
+    symbol?: string,
+    mousePosition?: Point,
+}> = ({ automaton, fromState, toState, symbol, mousePosition }) => {
+    const commands: Array<string> = [];
 
-    return (
-        <Edge from={from} to={mousePosition} />
-    );
-}
+    var from = getStatePosition(automaton, fromState);
+    const fromRadius = getStateRadius(automaton, fromState);
+    var to = toState ? getStatePosition(automaton, toState) : mousePosition!;
+    const mpoint = mousePosition || midpoint(from, to);
 
-export const StateEdge: React.FC<{
-    automaton: any,
-    fromState: string,
-    toState: string,
-    symbol: string
-}> = ({ automaton, fromState, toState, symbol }) => {
+    var arrow = null;
+    var label = null;
 
-    var from = getStatePosition(automaton, fromState, true);
-    var to = getStatePosition(automaton, toState, true);
+    if (fromState !== toState) {
+        from = closestPointOnCircle({ cx: from.x, cy: from.y, r: fromRadius }, mpoint);
+        to = toState ? closestPointOnCircle({ cx: to.x, cy: to.y, r: getStateRadius(automaton, toState) }, from) : mpoint;
 
-    const midpoint = calculateLineMidpoint(from, to);
+        // The "lineto" commands
+        // https://www.w3.org/TR/SVG/paths.html#PathDataLinetoCommands
+        commands.push(`M${fixed(from.x)},${fixed(from.y)}`); // starting point
+        commands.push(`L${fixed(to.x)},${fixed(to.y)}`); // end point
 
-    from = closestPointOnCircle(from, getStateRadius(automaton, fromState), midpoint);
-    to = closestPointOnCircle(to, getStateRadius(automaton, toState), midpoint);
+        arrow = <EdgeArrow point={to} angle={Math.atan2(to.y - from.y, to.x - from.x)} />;
 
-    return (
-        <Edge from={from} to={to} transition={{from: fromState, to: toState, symbol: symbol}} />
-    );
-}
+        var textAngle = Math.atan2(to.x - from.x, from.y - to.y);
+        // textAngle = textAngle - lineAngleAdjust; TODO: fix this
+        label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
+    } else {
+        const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : 90; // TODO: fix this
+        const stuff = getEndPointsAndCircle(from, fromRadius, anchorAngle);
 
-const Edge: React.FC<{
-    from: Point,
-    to: Point,
-    transition?: { from: string, to: string, symbol: string }
-}> = ({ from, to, transition }) => {
+        if (stuff.endAngle < stuff.startAngle) {
+            stuff.endAngle += Math.PI * 2;
+        }
 
-    const midpoint = calculateLineMidpoint(from, to);
+        const startX = stuff.circleX + stuff.circleRadius * Math.cos(stuff.startAngle);
+        const startY = stuff.circleY + stuff.circleRadius * Math.sin(stuff.startAngle);
+        const endX = stuff.circleX + stuff.circleRadius * Math.cos(stuff.endAngle);
+        const endY = stuff.circleY + stuff.circleRadius * Math.sin(stuff.endAngle);
+        const useGreaterThan180 = (Math.abs(stuff.endAngle - stuff.startAngle) > Math.PI) ? '1' : '0';
+
+        // The elliptical arc curve commands
+        // https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands
+        commands.push(`M${fixed(startX)},${fixed(startY)}`); // starting point
+        commands.push(`A${fixed(stuff.circleRadius)},${fixed(stuff.circleRadius)}`); // radii
+        commands.push('0'); // perfect circle
+        commands.push(useGreaterThan180); // large-arc-flag
+        commands.push('1'); // sweep-flag, arc drawn in a positive angle
+        commands.push(`${fixed(endX)},${fixed(endY)}`); // end point
+
+        arrow = <EdgeArrow point={{ x: stuff.endX, y: stuff.endY }} angle={stuff.endAngle + Math.PI * 0.4} />;
+        label = <EdgeLabel point={{
+            x: stuff.circleX + stuff.circleRadius * Math.cos(anchorAngle),
+            y: stuff.circleY + stuff.circleRadius * Math.sin(anchorAngle),
+        }} text={symbol || ''} angle={anchorAngle} />;
+    }
 
     var dataProps = {};
     const classes: Array<string> = ['edge'];
-    if (!transition) {
+    if (mousePosition) {
         classes.push('linking');
     } else {
         dataProps = {
-            'data-from': transition.from,
-            'data-to': transition.to,
-            'data-symbol': transition.symbol
+            'data-from': fromState,
+            'data-to': toState,
+            'data-symbol': symbol,
         };
     }
 
     return (
         <g className={classes.join(' ')} {...dataProps}>
-            <path className="line" d={`M${from.x},${from.y}L${to.x},${to.y}`} />
-            <EdgeArrow from={from} to={to} />
-            <text x={midpoint.x + 5} y={midpoint.y - 5}>{transition ? transition.symbol : ''}</text>
+            <path className="line" d={commands.join(' ')} />
+            {arrow}
+            {label}
         </g>
     );
 }
 
 const EdgeArrow: React.FC<{
-    from: Point,
-    to: Point,
-}> = ({ from, to }) => {
-    const angle = Math.atan2(to.y - from.y, to.x - from.x);
+    point: Point,
+    angle: number
+}> = ({ point, angle }) => {
     const dx = Math.cos(angle);
     const dy = Math.sin(angle);
 
-    const path: Array<string> = []
-    path.push(`M${to.x},${to.y}`);
-    path.push(`L${to.x - 8 * dx + 5 * dy},${to.y - 8 * dy - 5 * dx}`);
-    path.push(` ${to.x - 8 * dx - 5 * dy},${to.y - 8 * dy + 5 * dx}`);
+    const commands: Array<string> = []
+    commands.push(`M${fixed(point.x)},${fixed(point.y)}`);
+    commands.push(`L${fixed(point.x - 8 * dx + 5 * dy)},${fixed(point.y - 8 * dy - 5 * dx)}`);
+    commands.push(`${fixed(point.x - 8 * dx - 5 * dy)},${fixed(point.y - 8 * dy + 5 * dx)}`);
 
     return (
-        <path className="arrow" d={path.join('')} />
+        <path className="arrow" d={commands.join(' ')} />
+    );
+}
+
+const EdgeLabel: React.FC<{
+    point: Point,
+    text: string,
+    angle?: number,
+}> = ({ point, text, angle }) => {
+    var x = point.x;
+    var y = point.y;
+
+    if (angle !== null && angle !== undefined) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const adjustX = 5 * (cos > 0 ? 1 : -1);
+        const adjustY = (10 + 5) * (sin > 0 ? 1 : -1);
+        const slide = sin * Math.pow(Math.abs(sin), 40) * adjustX - cos * Math.pow(Math.abs(cos), 10) * adjustY;
+        x += adjustX - sin * slide;
+        y += adjustY + cos * slide;
+    }
+
+    x = Math.round(x);
+    y = Math.round(y);
+
+    return (
+        <text x={fixed(x)} y={fixed(y + 6)}>{text}</text>
     );
 }

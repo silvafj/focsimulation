@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import noam from 'noam';
 
-import { LinkingEdge, StateEdge } from './edge/edge';
+import { Edge } from './edge/edge';
 import { Node } from './node/node';
 import {
     DraggingMode,
@@ -11,6 +11,7 @@ import {
     groupByTransitions,
     updateTransitions
 } from './helpers';
+import { Point } from '../../utils/math';
 
 import './automaton-designer.css';
 
@@ -18,7 +19,8 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
     const [selected, setSelected] = useState();
     const [draggingMode, setDraggingMode] = useState(DraggingMode.NONE);
-    const [coordinates, setCoordinates] = useState({ x: 0, y: 0 });
+    const [draggingOffset, setDraggingOffset] = useState<Point>();
+    const [mouseLocation, setMouseLocation] = useState<{ position: Point, state: string | null }>({ position: { x: 0, y: 0 }, state: null });
 
     const doubleClickHandler = (e: React.MouseEvent) => {
         const element = e.target as Element;
@@ -62,38 +64,43 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         const selected = getStateFromElement(element);
         setSelected(selected);
 
-        if (selected) {
-            const draggingMode = e.shiftKey ? DraggingMode.LINKING : DraggingMode.DRAGGING;
-            setDraggingMode(draggingMode);
-
-            switch (draggingMode) {
-                case DraggingMode.DRAGGING:
-                    // Store an offset
-                    const position = getMousePosition(e);
-                    setCoordinates({
-                        x: automaton.statePositions[selected].x - position.x,
-                        y: automaton.statePositions[selected].y - position.y
-                    });
-                    break;
-                case DraggingMode.LINKING:
-                    setCoordinates(getMousePosition(e));
-                    break;
-            }
+        if (!selected) {
+            return;
         }
+
+        const currentPosition = getMousePosition(e);
+        const draggingMode = e.shiftKey ? DraggingMode.LINKING : DraggingMode.DRAGGING;
+        setDraggingMode(draggingMode);
+
+        switch (draggingMode) {
+            case DraggingMode.DRAGGING:
+                setDraggingOffset({
+                    x: automaton.statePositions[selected].x - currentPosition.x,
+                    y: automaton.statePositions[selected].y - currentPosition.y,
+                });
+                break;
+            case DraggingMode.LINKING:
+                setMouseLocation({ position: currentPosition, state: selected });
+                break;
+        }
+
     }
 
     const mouseMoveHandler = (e: React.MouseEvent) => {
+        const element = e.target as Element;
+
         switch (draggingMode) {
             case DraggingMode.DRAGGING:
                 automaton = { ...automaton };
-
-                automaton.statePositions[selected] = getMousePosition(e, coordinates);
-
+                automaton.statePositions[selected] = getMousePosition(e, draggingOffset);
                 onUpdate(automaton);
                 break;
 
             case DraggingMode.LINKING:
-                setCoordinates(getMousePosition(e));
+                setMouseLocation({
+                    position: getMousePosition(e),
+                    state: getStateFromElement(element),
+                });
                 break;
         }
     }
@@ -121,8 +128,21 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
     var linkingEdge = null;
     if (draggingMode === DraggingMode.LINKING) {
-        linkingEdge = <LinkingEdge automaton={automaton} fromState={selected} mousePosition={coordinates} />;
+        linkingEdge = <Edge
+            automaton={automaton}
+            fromState={selected}
+            toState={mouseLocation.state}
+            mousePosition={mouseLocation.position}
+        />;
     }
+
+    /* TODO:
+       * self link - transition to same state
+       * ability to select edges
+       * curved links - to organise them better in the screen
+       * del (key) - to delete elements (nodes and/or edges)
+       * toolbar for testing - Input (for string), Start, Reset, Step backward, Read next, Read all
+    */
 
     return (
         <div className="automaton-designer-container">
@@ -142,7 +162,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                         selected={selected === state} />
                 )}
                 {groupByTransitions(automaton.transitions).map(
-                    t => <StateEdge key={`${t.fromState}-${t.toState}`} automaton={automaton}
+                    t => <Edge key={`${t.fromState}-${t.toState}`} automaton={automaton}
                         fromState={t.fromState} toState={t.toState} symbol={t.symbols.sort().join(',')} />
                 )}
                 {linkingEdge}

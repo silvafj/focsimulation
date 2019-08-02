@@ -1,6 +1,6 @@
 import noam from 'noam';
 
-import { Point } from '../../utils/types';
+import { Point } from '../../utils/math';
 
 export function getMousePosition(e: React.MouseEvent, offset: Point = { x: 0, y: 0 }): Point {
     const svg = e.currentTarget as SVGSVGElement;

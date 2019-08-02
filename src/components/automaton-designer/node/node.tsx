@@ -1,7 +1,7 @@
 import React from 'react';
 import noam from 'noam';
 
-import { Point } from '../../../utils/types';
+import { Point, fixed } from '../../../utils/math';
 
 import './node.css';
 
@@ -13,7 +13,7 @@ export const Node: React.FC<{
 }> = ({ automaton, state, dragging, selected }) => {
 
     const position: Point = automaton.statePositions[state];
-    const translate = `translate(${position.x}, ${position.y})`;
+    const translate = `translate(${fixed(position.x)},${fixed(position.y)})`;
 
     const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);
     const isInitial: boolean = (automaton.initialState === state);
@@ -39,7 +39,7 @@ export const Node: React.FC<{
         <g className={classes.join(' ')} transform={translate} data-state={state}>
             {initialStateArrow}
             <circle cx="22" cy="22" r="18" />
-            {isAccepting ? <circle cx="22" cy="22" r="22" /> : <></>}
+            {isAccepting ? <circle cx="22" cy="22" r="22" /> : null}
             <text x="22" y="27">{state}</text>
         </g>
     );
