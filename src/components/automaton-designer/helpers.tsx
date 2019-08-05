@@ -44,10 +44,54 @@ export function getStatePosition(automaton: any, state: string): Point {
     }
 }
 
+export function getNextState(automaton: any): string {
+    const nextState: number = automaton.states.reduce(
+        (acc: number, state: string) => Math.max(acc, parseInt(state.substr(1))), -1);
+    return 's' + (nextState + 1);
+}
+
+export function setAcceptingState(automaton: any, state: string, accepting: boolean): void {
+    if (accepting) {
+        if (!noam.fsm.isAcceptingState(automaton, state)) {
+            noam.fsm.addAcceptingState(automaton, state);
+        }
+    } else {
+        automaton.acceptingStates = automaton.acceptingStates.filter((e: string) => e !== state);
+    }
+}
+
+export function addState(automaton: any, state: string, position: Point): void {
+    noam.fsm.addState(automaton, state);
+    if (!automaton.statePositions) {
+        automaton.statePositions = [];
+    }
+
+    automaton.statePositions[state] = position;
+
+    if (automaton.states.length === 1) {
+        noam.fsm.setInitialState(automaton, state);
+    }
+}
+
+export function removeState(automaton: any, state: string): void {
+    if (automaton.initialState === state) {
+        automaton.initialState = '';
+    }
+    automaton.states = automaton.states.filter((s: string) => s !== state);
+    delete automaton.statePositions[state];
+    automaton.acceptingStates = automaton.acceptingStates.filter((s: string) => s !== state);
+    automaton.transitions.map((t: NoamAutomatonTransition) => t.toStates.filter((s: string) => s !== state));
+    automaton.transitions = automaton.transitions.filter(
+        (t: NoamAutomatonTransition) => (t.fromState !== state) &&
+            t.toStates.length > 0 &&
+            !(t.toStates.length === 1 && t.toStates.includes(state)));
+}
+
 export function updateTransitions(
     automaton: any,
     transition: { from: string, to: string, symbol: string },
-    newSymbol: string
+    newSymbol: string,
+    transitionAngle?: number,
 ): any {
     const newArr = newSymbol.split(',').filter(Boolean);
     const oldArr = transition.symbol.split(',').filter(Boolean);
@@ -59,6 +103,13 @@ export function updateTransitions(
         }
 
         noam.fsm.addTransition(automaton, transition.from, [transition.to], symbol);
+
+        if (transitionAngle) {
+            if (!automaton.transitionAngles) {
+                automaton.transitionAngles = [];
+            }
+            automaton.transitionAngles[`${transition.from}-${transition.to}`] = transitionAngle;
+        }
     }
 
     // Remove transitions

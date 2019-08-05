@@ -12,6 +12,7 @@
     "noam": "git+https://github.com/izuzak/noam.git",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-hot-keys": "^2.0.0-beta.2",
     "react-router-dom": "^5.0.1",
     "react-scripts": "3.0.1",
     "typescript": "3.5.3",

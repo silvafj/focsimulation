@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import Hotkeys from 'react-hot-keys';
+import { HotkeysEvent } from 'hotkeys-js';
+
 import noam from 'noam';
 
 import { Edge } from './edge/edge';
@@ -10,7 +13,11 @@ import {
     getStatePosition,
     getTransitionFromElement,
     groupByTransitions,
-    updateTransitions
+    updateTransitions,
+    addState,
+    removeState,
+    setAcceptingState,
+    getNextState
 } from './helpers';
 import { Point, angleOfLine } from '../../utils/math';
 
@@ -29,29 +36,14 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
         var state = getStateFromElement(element);
         if (state) {
-            if (noam.fsm.isAcceptingState(automaton, state)) {
-                automaton.acceptingStates = automaton.acceptingStates.filter((e: string) => e !== state);
-            } else {
-                noam.fsm.addAcceptingState(automaton, state);
-            }
+            setAcceptingState(automaton, state, !noam.fsm.isAcceptingState(automaton, state));
         } else {
             const transition = getTransitionFromElement(element);
             if (transition) {
                 const symbol = prompt('Modify the transition symbol', transition.symbol);
                 automaton = updateTransitions(automaton, transition, symbol || '');
             } else {
-                state = 's' + automaton.states.length.toString();
-
-                noam.fsm.addState(automaton, state);
-                if (!automaton.statePositions) {
-                    automaton.statePositions = [];
-                }
-
-                automaton.statePositions[state] = getMousePosition(e, { x: -22, y: -22 });
-
-                if (automaton.states.length === 1) {
-                    noam.fsm.setInitialState(automaton, state);
-                }
+                addState(automaton, getNextState(automaton), getMousePosition(e, { x: -22, y: -22 }));
             }
         }
 
@@ -115,12 +107,15 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
             if (toState) {
                 const symbol = prompt("What is the transition symbol?");
                 automaton = { ...automaton };
-                automaton = updateTransitions(automaton, { from: selected, to: toState, symbol: '' }, symbol || '');
-
-                if (!automaton.transitionAngles) {
-                    automaton.transitionAngles = [];
-                }
-                automaton.transitionAngles[`${selected}-${toState}`] = angleOfLine(getStatePosition(automaton, selected), getMousePosition(e));
+                automaton = updateTransitions(
+                    automaton,
+                    {
+                        from: selected,
+                        to: toState, symbol: ''
+                    },
+                    symbol || '',
+                    angleOfLine(getStatePosition(automaton, selected), getMousePosition(e))
+                );
 
                 onUpdate(automaton);
             }
@@ -143,36 +138,64 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         />;
     }
 
-    /* TODO:
-       * ability to select edges
-       * curved links - to organise them better in the screen
-       * del (key) - to delete elements (nodes and/or edges)
-       * toolbar for testing - Input (for string), Start, Reset, Step backward, Read next, Read all
-    */
+    const keyUpHandler = (shortcut: string, e: KeyboardEvent, handle: HotkeysEvent) => {
+        if (!selected) {
+            return;
+        }
 
+        automaton = { ...automaton };
+        switch (shortcut) {
+            case 'delete': // Remove current element
+                setSelected(null);
+                console.log(selected);
+                removeState(automaton, selected);
+                break;
+
+            case 'shift+a': // Set state accepting
+                setAcceptingState(automaton, selected, !noam.fsm.isAcceptingState(automaton, selected));
+                break;
+
+            case 'shift+i': // Set state as initial
+                automaton.initialState = selected;
+        }
+        console.log(automaton);
+        onUpdate(automaton);
+    }
+
+    /** TODO:
+     * del (key) - to delete elements (nodes and/or edges)
+     * ability to select edges
+     * toolbar for testing - Input (for string), Start, Reset, Step backward, Read next, Read all
+     * curved links - to organise them better in the screen
+     */
     return (
         <div className="automaton-designer-container">
-            <svg
-                className="automaton-designer"
-                onDoubleClick={doubleClickHandler}
-                onMouseDown={mouseDownHandler}
-                onMouseUp={mouseUpHandler}
-                onMouseLeave={mouseLeaveHandler}
-                onMouseMove={mouseMoveHandler}
+            <Hotkeys
+                keyName="delete,shift+a,shift+i"
+                onKeyUp={keyUpHandler}
             >
-                {(automaton.states as Array<string>).map(
-                    state => <Node key={state}
-                        automaton={automaton}
-                        state={state}
-                        dragging={selected === state && draggingMode === DraggingMode.DRAGGING}
-                        selected={selected === state} />
-                )}
-                {groupByTransitions(automaton.transitions).map(
-                    t => <Edge key={`${t.fromState}-${t.toState}`} automaton={automaton}
-                        fromState={t.fromState} toState={t.toState} symbol={t.symbols.sort().join(',')} />
-                )}
-                {linkingEdge}
-            </svg>
+                <svg
+                    className="automaton-designer"
+                    onDoubleClick={doubleClickHandler}
+                    onMouseDown={mouseDownHandler}
+                    onMouseUp={mouseUpHandler}
+                    onMouseLeave={mouseLeaveHandler}
+                    onMouseMove={mouseMoveHandler}
+                >
+                    {(automaton.states as Array<string>).map(
+                        state => <Node key={state}
+                            automaton={automaton}
+                            state={state}
+                            dragging={selected === state && draggingMode === DraggingMode.DRAGGING}
+                            selected={selected === state} />
+                    )}
+                    {groupByTransitions(automaton.transitions).map(
+                        t => <Edge key={`${t.fromState}-${t.toState}`} automaton={automaton}
+                            fromState={t.fromState} toState={t.toState} symbol={t.symbols.sort().join(',')} />
+                    )}
+                    {linkingEdge}
+                </svg>
+            </Hotkeys>
         </div>
     );
 }
