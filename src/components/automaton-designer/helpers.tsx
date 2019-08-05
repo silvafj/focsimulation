@@ -87,6 +87,15 @@ export function removeState(automaton: any, state: string): void {
             !(t.toStates.length === 1 && t.toStates.includes(state)));
 }
 
+export function removeTransition(automaton: any, key: string): void {
+    delete automaton.transitionAngles[key];
+
+    const [fromState, toState] = key.split('-');
+    automaton.transitions = automaton.transitions.filter(
+        (t: NoamAutomatonTransition) => !(t.fromState === fromState && t.toStates.length === 1 && t.toStates.includes(toState)));
+
+}
+
 export function updateTransitions(
     automaton: any,
     transition: { from: string, to: string, symbol: string },
@@ -133,12 +142,6 @@ export function updateTransitions(
     }
 
     return automaton;
-}
-
-export enum DraggingMode {
-    NONE,
-    DRAGGING,
-    LINKING,
 }
 
 type NoamAutomatonTransition = { fromState: string, toStates: Array<string>, symbol: string };

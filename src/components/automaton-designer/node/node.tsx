@@ -8,9 +8,9 @@ import './node.css';
 export const Node: React.FC<{
     automaton: any,
     state: string,
-    dragging: boolean,
     selected: boolean,
-}> = ({ automaton, state, dragging, selected }) => {
+    dragging: boolean,
+}> = ({ automaton, state, selected, dragging }) => {
 
     const position: Point = automaton.statePositions[state];
     const translate = `translate(${fixed(position.x)},${fixed(position.y)})`;

@@ -1,3 +1,7 @@
+.automaton-designer .edge {
+    pointer-events: bounding-box;
+}
+
 .automaton-designer .edge.linking {
     pointer-events: none;
 }
@@ -7,7 +11,20 @@
     stroke: black;
 }
 
+.automaton-designer .edge.selected .arrow {
+    fill: blue;
+    stroke: blue;
+}
+
 .automaton-designer .edge .line {
     fill: none;
     stroke: black;
+}
+
+.automaton-designer .edge.selected .line {
+    stroke: blue;
+}
+
+.automaton-designer .edge.selected text {
+    fill: blue;
 }

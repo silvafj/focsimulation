@@ -47,7 +47,9 @@ export const Edge: React.FC<{
     toState?: string | null,
     symbol?: string,
     mousePosition?: Point,
-}> = ({ automaton, fromState, toState, symbol, mousePosition }) => {
+    selected: boolean,
+    dragging: boolean,
+}> = ({ automaton, fromState, toState, symbol, mousePosition, selected, dragging }) => {
     const commands: Array<string> = [];
 
     var from = getStatePosition(automaton, fromState);
@@ -103,6 +105,12 @@ export const Edge: React.FC<{
 
     var dataProps = {};
     const classes: Array<string> = ['edge'];
+    if (dragging) {
+        classes.push('dragging');
+    }
+    if (selected) {
+        classes.push('selected');
+    }
     if (mousePosition) {
         classes.push('linking');
     } else {
