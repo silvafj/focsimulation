@@ -1,15 +1,33 @@
-.automaton-designer-container {
-    position: relative;
-    background: white;
-    margin-top: 4px;
-    min-height: 600px;
-    user-select: none;
+.automaton-designer {
+    overflow: hidden;
 }
 
-.automaton-designer {
+.automaton-designer .toolbar {
+    width: 100%;
+    display: inline-flex;
+}
+
+.automaton-designer .toolbar > *{
+    margin-left: 4px;
+}
+
+.automaton-designer .toolbar > *:first-child{
+    margin-left: 0;
+    min-width: 180px;
+}
+
+.automaton-designer .container {
+    margin-top: 4px;
+    min-height: 600px;
+    position: relative;
+}
+
+.automaton-designer .container>svg {
+    user-select: none;
+    background: white;
+    height: 100%;
+    left: 0;
     position: absolute;
     top: 0;
-    left: 0;
-    height: 100%;
     width: 100%;
 }

@@ -10,7 +10,8 @@ export const Node: React.FC<{
     state: string,
     selected: boolean,
     dragging: boolean,
-}> = ({ automaton, state, selected, dragging }) => {
+    active: boolean
+}> = ({ automaton, state, selected, dragging, active }) => {
 
     const position: Point = automaton.statePositions[state];
     const translate = `translate(${fixed(position.x)},${fixed(position.y)})`;
@@ -27,6 +28,9 @@ export const Node: React.FC<{
     }
     if (noam.fsm.isAcceptingState(automaton, state)) {
         classes.push('accept');
+    }
+    if (active) {
+        classes.push('active')
     }
 
     var initialStateArrow = null;

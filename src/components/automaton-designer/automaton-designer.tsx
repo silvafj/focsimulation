@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Hotkeys from 'react-hot-keys';
 import { HotkeysEvent } from 'hotkeys-js';
-
+import { Input, Button, Tooltip } from 'antd';
 import noam from 'noam';
 
 import { Edge } from './edge/edge';
@@ -23,8 +23,54 @@ import { Point, angleOfLine } from '../../utils/math';
 
 import './automaton-designer.css';
 
+type DebuggingMode = {
+    currentStates: Array<string>,
+    inputWord: string,
+    nextSymbolIndex: number,
+    iteratingUntilEnd: Boolean,
+};
+
 enum ObjectType { NODE, EDGE }
 enum DraggingMode { DRAGGING, LINKING }
+
+function canRunAutomaton(automaton: any): Boolean {
+    return automaton.states.length > 0 && automaton.initialState;
+}
+
+function resetAutomaton(automaton: any, inputWord: string): DebuggingMode {
+    return {
+        currentStates: noam.fsm.computeEpsilonClosure(automaton, [automaton.initialState]),
+        inputWord: inputWord,
+        nextSymbolIndex: 0,
+        iteratingUntilEnd: false,
+    };
+}
+
+function previousSymbol(automaton: any, db: DebuggingMode): DebuggingMode {
+    if (db.nextSymbolIndex <= 0) {
+        return db;
+    }
+
+    return {
+        currentStates: noam.fsm.readString(automaton, db.inputWord.substring(0, db.nextSymbolIndex - 1).split('')),
+        inputWord: db.inputWord,
+        nextSymbolIndex: db.nextSymbolIndex - 1,
+        iteratingUntilEnd: false,
+    };
+}
+
+function nextSymbol(automaton: any, db: DebuggingMode): DebuggingMode {
+    if (db.nextSymbolIndex >= db.inputWord.length) {
+        return db;
+    }
+
+    return {
+        currentStates: noam.fsm.makeTransition(automaton, db.currentStates, db.inputWord[db.nextSymbolIndex]),
+        inputWord: db.inputWord,
+        nextSymbolIndex: db.nextSymbolIndex + 1,
+        iteratingUntilEnd: db.iteratingUntilEnd,
+    };
+}
 
 export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton: any) => void }> = ({ automaton, onUpdate }) => {
 
@@ -32,6 +78,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     const [draggingMode, setDraggingMode] = useState<DraggingMode | null>();
     const [draggingOffset, setDraggingOffset] = useState<Point>();
     const [mouseLocation, setMouseLocation] = useState<{ position: Point, state: string | null }>({ position: { x: 0, y: 0 }, state: null });
+    const [debuggingMode, setDebuggingMode] = useState<DebuggingMode | null>();
 
     const doubleClickHandler = (e: React.MouseEvent) => {
         const element = e.target as Element;
@@ -188,45 +235,126 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         onUpdate(automaton);
     }
 
+    const inputWordRef: React.RefObject<Input> = React.createRef();
+
+    const testWordHandler = (e: React.MouseEvent) => {
+        const inputWord = inputWordRef && inputWordRef.current ? inputWordRef.current.input.value : '';
+        console.log(noam.fsm.isStringInLanguage(automaton, inputWord));
+    }
+
+    const startDebuggingHandler = (e: React.MouseEvent) => {
+        // TODO: adapt the input to be colorized and have symbols showing what is being read
+        resetDebuggingHandler(e);
+    }
+
+    const stopDebuggingHandler = (e: React.MouseEvent) => {
+        // TODO: revert to normal input
+        setDebuggingMode(null);
+    }
+
+    const resetDebuggingHandler = (e: React.MouseEvent) => {
+        const inputWord = inputWordRef && inputWordRef.current ? inputWordRef.current.input.value : '';
+        setDebuggingMode(resetAutomaton(automaton, inputWord));
+    }
+
+    const stepBackwardHandler = (e: React.MouseEvent) => {
+        setDebuggingMode(previousSymbol(automaton, debuggingMode!));
+    }
+
+    const stepForwardHandler = (e: React.MouseEvent) => {
+        setDebuggingMode(nextSymbol(automaton, debuggingMode!));
+    }
+
+    const fastForwardHandler = (e: React.MouseEvent) => {
+        setDebuggingMode({
+            currentStates: debuggingMode!.currentStates,
+            inputWord: debuggingMode!.inputWord,
+            nextSymbolIndex: debuggingMode!.nextSymbolIndex,
+            iteratingUntilEnd: true,
+        });
+    }
+
+    useEffect(() => {
+        let intervalId: number | undefined;
+
+        if (debuggingMode && debuggingMode.iteratingUntilEnd) {
+            intervalId = window.setInterval(() => setDebuggingMode(nextSymbol(automaton, debuggingMode)), 750);
+        } else if (intervalId) {
+            clearInterval(intervalId);
+        }
+
+        return () => clearInterval(intervalId);
+    }, [debuggingMode, automaton]);
+
     /** TODO:
-     * toolbar for testing - Input (for string), Start, Reset, Step backward, Read next, Read all
      * curved links - to organise them better in the screen
      */
     return (
-        <div className="automaton-designer-container">
-            <Hotkeys
-                keyName="delete,shift+a,shift+i"
-                onKeyUp={keyUpHandler}
-            >
-                <svg
-                    className="automaton-designer"
-                    onDoubleClick={doubleClickHandler}
-                    onMouseDown={mouseDownHandler}
-                    onMouseUp={mouseUpHandler}
-                    onMouseLeave={mouseLeaveHandler}
-                    onMouseMove={mouseMoveHandler}
+        <div className="automaton-designer">
+            <div className="toolbar">
+                <Input placeholder="Write your test word" ref={inputWordRef} disabled={debuggingMode != null} />
+                <Tooltip title="Test the word">
+                    <Button icon="caret-right" disabled={debuggingMode != null || !canRunAutomaton(automaton)} onClick={testWordHandler}/>
+                </Tooltip>
+
+                <Tooltip title="Start debugging">
+                    {debuggingMode
+                        ? <Button icon="stop" onClick={stopDebuggingHandler} />
+                        : <Button icon="bug" disabled={!canRunAutomaton(automaton)} onClick={startDebuggingHandler} />}
+                </Tooltip>
+
+                <Tooltip title="Reset the automaton and go back to the beginning of the input sequence">
+                    <Button icon="fast-backward" disabled={!debuggingMode} onClick={resetDebuggingHandler} />
+                </Tooltip>
+
+                <Tooltip title="Go back one symbol">
+                    <Button icon="step-backward" disabled={!debuggingMode} onClick={stepBackwardHandler} />
+                </Tooltip>
+
+                <Tooltip title="Consume the next input symbol in the sequence">
+                    <Button icon="step-forward" disabled={!debuggingMode} onClick={stepForwardHandler} />
+                </Tooltip>
+
+                <Tooltip title="Consume all remaining input symbols">
+                    <Button icon="fast-forward" disabled={!debuggingMode} onClick={fastForwardHandler} />
+                </Tooltip>
+            </div>
+
+            <div className="container">
+                <Hotkeys
+                    keyName="delete,shift+a,shift+i"
+                    onKeyUp={keyUpHandler}
                 >
-                    {(automaton.states as Array<string>).map(
-                        s => <Node key={s}
-                            automaton={automaton}
-                            state={s}
-                            selected={Boolean(selectedObject && selectedObject.type === ObjectType.NODE && selectedObject.key === s)}
-                            dragging={Boolean(selectedObject && selectedObject.type === ObjectType.NODE && selectedObject.key === s && draggingMode === DraggingMode.DRAGGING)}
-                        />
-                    )}
-                    {groupByTransitions(automaton.transitions).map(
-                        t => {
-                            const edgeKey = `${t.fromState}-${t.toState}`;
-                            return <Edge key={edgeKey} automaton={automaton}
-                                fromState={t.fromState} toState={t.toState} symbol={t.symbols.sort().join(',')}
-                                dragging={Boolean(selectedObject && selectedObject.type === ObjectType.EDGE && selectedObject.key === edgeKey && draggingMode === DraggingMode.DRAGGING)}
-                                selected={Boolean(selectedObject && selectedObject.type === ObjectType.EDGE && selectedObject.key === edgeKey)}
-                            />;
-                        }
-                    )}
-                    {linkingEdge}
-                </svg>
-            </Hotkeys>
+                    <svg
+                        onDoubleClick={doubleClickHandler}
+                        onMouseDown={mouseDownHandler}
+                        onMouseUp={mouseUpHandler}
+                        onMouseLeave={mouseLeaveHandler}
+                        onMouseMove={mouseMoveHandler}
+                    >
+                        {(automaton.states as Array<string>).map(
+                            s => <Node key={s}
+                                automaton={automaton}
+                                state={s}
+                                selected={Boolean(selectedObject && selectedObject.type === ObjectType.NODE && selectedObject.key === s)}
+                                dragging={Boolean(selectedObject && selectedObject.type === ObjectType.NODE && selectedObject.key === s && draggingMode === DraggingMode.DRAGGING)}
+                                active={Boolean(debuggingMode && debuggingMode.currentStates.includes(s))}
+                            />
+                        )}
+                        {groupByTransitions(automaton.transitions).map(
+                            t => {
+                                const edgeKey = `${t.fromState}-${t.toState}`;
+                                return <Edge key={edgeKey} automaton={automaton}
+                                    fromState={t.fromState} toState={t.toState} symbol={t.symbols.sort().join(',')}
+                                    dragging={Boolean(selectedObject && selectedObject.type === ObjectType.EDGE && selectedObject.key === edgeKey && draggingMode === DraggingMode.DRAGGING)}
+                                    selected={Boolean(selectedObject && selectedObject.type === ObjectType.EDGE && selectedObject.key === edgeKey)}
+                                />;
+                            }
+                        )}
+                        {linkingEdge}
+                    </svg>
+                </Hotkeys>
+            </div>
         </div>
     );
 }
