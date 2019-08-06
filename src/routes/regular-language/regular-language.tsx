@@ -72,7 +72,7 @@ export const RegularLanguage: React.FC = () => {
                 prefix={ExpressionHelp}
                 suffix={
                     <Tooltip placement="topRight" title={error ? error.message : ''}>
-                        <Icon type="close-circle" theme="filled" style={{ color: 'red', display: (!error ? 'none' : 'inherit') }} />
+                        <Icon type="close" style={{ color: 'red', display: (!error ? 'none' : 'inherit') }} />
                     </Tooltip>
                 }
                 addonAfter={

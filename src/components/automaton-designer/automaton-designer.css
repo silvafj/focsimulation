@@ -11,9 +11,28 @@
     margin-left: 4px;
 }
 
-.automaton-designer .toolbar .ant-input-affix-wrapper {
+.automaton-designer .toolbar>*:first-child {
     margin-left: 0;
     min-width: 180px;
+    line-height: 32px;
+}
+
+.automaton-designer .toolbar .debugging-symbols {
+    padding-left: 11px;
+}
+
+.automaton-designer .toolbar .debugging-symbols>* {
+    display: inline-block;
+    width: 16px;
+    text-align: center;
+}
+
+.automaton-designer .toolbar .debugging-symbols .consumed {
+    text-decoration: line-through;
+}
+
+.automaton-designer .toolbar .debugging-symbols .current {
+    background-color: lightpink;
 }
 
 .automaton-designer .toolbar .ant-input-suffix .anticon-check {

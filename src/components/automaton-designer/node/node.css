@@ -4,7 +4,7 @@
     pointer-events: bounding-box;
 }
 
-.automaton-designer .container>svg .node.active circle:first-of-type {
+.automaton-designer .container>svg .node.current circle:first-of-type {
     fill: lightpink;
 }
 

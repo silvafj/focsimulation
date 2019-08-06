@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 import noam from 'noam';
 
 import { Point, fixed } from '../../../utils/math';
@@ -10,8 +11,8 @@ export const Node: React.FC<{
     state: string,
     selected: boolean,
     dragging: boolean,
-    active: boolean
-}> = ({ automaton, state, selected, dragging, active }) => {
+    current: boolean
+}> = ({ automaton, state, selected, dragging, current }) => {
 
     const position: Point = automaton.statePositions[state];
     const translate = `translate(${fixed(position.x)},${fixed(position.y)})`;
@@ -19,19 +20,13 @@ export const Node: React.FC<{
     const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);
     const isInitial: boolean = (automaton.initialState === state);
 
-    const classes: Array<string> = ['node'];
-    if (dragging) {
-        classes.push('dragging');
-    }
-    if (selected) {
-        classes.push('selected');
-    }
-    if (noam.fsm.isAcceptingState(automaton, state)) {
-        classes.push('accept');
-    }
-    if (active) {
-        classes.push('active')
-    }
+    const nodeClass = classNames({
+        node: true,
+        dragging: dragging,
+        selected: selected,
+        accept: noam.fsm.isAcceptingState(automaton, state),
+        current: current,
+    });
 
     var initialStateArrow = null;
     if (isInitial) {
@@ -40,7 +35,7 @@ export const Node: React.FC<{
     }
 
     return (
-        <g className={classes.join(' ')} transform={translate} data-state={state}>
+        <g className={nodeClass} transform={translate} data-state={state}>
             {initialStateArrow}
             <circle cx="22" cy="22" r="18" />
             {isAccepting ? <circle cx="22" cy="22" r="22" /> : null}

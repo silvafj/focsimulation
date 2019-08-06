@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import classNames from 'classnames';
 import Hotkeys from 'react-hot-keys';
 import { HotkeysEvent } from 'hotkeys-js';
 import { Input, Button, Tooltip, Icon } from 'antd';
@@ -293,18 +294,30 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     return (
         <div className="automaton-designer">
             <div className="toolbar">
-                <Input
-                    placeholder="Write your test word"
-                    disabled={debuggingMode != null}
-                    value={testWord}
-                    suffix={
-                        <Icon
-                            // theme="filled"
-                            type={testWord && isWordInLanguage(automaton, testWord) ? 'check' : 'close'}
-                            style={{ display: (!testWord ? 'none' : 'inherit') }} />
+                {debuggingMode
+                    ? <span className="ant-input-affix-wrapper debugging-symbols">{
+                        debuggingMode.testWord.split('').map((symbol, index) => {
+                            const symbolClass = classNames({
+                                consumed: index < debuggingMode.nextSymbolIndex,
+                                current: index === debuggingMode.nextSymbolIndex,
+                            });
+
+                            return <span className={symbolClass}>{symbol}</span>;
+                        })
                     }
-                    onChange={(e) => setTestWord(e.target.value)}
-                />
+                    </span>
+                    : <Input
+                        placeholder="Write your test word"
+                        disabled={debuggingMode != null}
+                        value={testWord}
+                        suffix={
+                            <Icon
+                                type={testWord && isWordInLanguage(automaton, testWord) ? 'check' : 'close'}
+                                style={{ display: (!testWord ? 'none' : 'inherit') }} />
+                        }
+                        onChange={(e) => setTestWord(e.target.value)}
+                    />
+                }
 
                 <Tooltip title="Start debugging">
                     {debuggingMode
@@ -347,7 +360,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                                 state={s}
                                 selected={Boolean(selectedObject && selectedObject.type === ObjectType.NODE && selectedObject.key === s)}
                                 dragging={Boolean(selectedObject && selectedObject.type === ObjectType.NODE && selectedObject.key === s && draggingMode === DraggingMode.DRAGGING)}
-                                active={Boolean(debuggingMode && debuggingMode.currentStates.includes(s))}
+                                current={Boolean(debuggingMode && debuggingMode.currentStates.includes(s))}
                             />
                         )}
                         {groupByTransitions(automaton.transitions).map(

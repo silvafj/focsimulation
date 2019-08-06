@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 import noam from 'noam';
 
 import {
@@ -103,17 +104,15 @@ export const Edge: React.FC<{
         }} text={symbol || ''} angle={anchorAngle} />;
     }
 
+    const edgeClass = classNames({
+        edge: true,
+        dragging: dragging,
+        selected: selected,
+        linking: mousePosition,
+    })
+
     var dataProps = {};
-    const classes: Array<string> = ['edge'];
-    if (dragging) {
-        classes.push('dragging');
-    }
-    if (selected) {
-        classes.push('selected');
-    }
-    if (mousePosition) {
-        classes.push('linking');
-    } else {
+    if (!mousePosition) {
         dataProps = {
             'data-from': fromState,
             'data-to': toState,
@@ -122,7 +121,7 @@ export const Edge: React.FC<{
     }
 
     return (
-        <g className={classes.join(' ')} {...dataProps}>
+        <g className={edgeClass} {...dataProps}>
             <path className="line" d={commands.join(' ')} />
             {arrow}
             {label}
