@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Hotkeys from 'react-hot-keys';
 import { HotkeysEvent } from 'hotkeys-js';
-import { Input, Button, Tooltip } from 'antd';
+import { Input, Button, Tooltip, Icon } from 'antd';
 import noam from 'noam';
 
 import { Edge } from './edge/edge';
@@ -25,7 +25,7 @@ import './automaton-designer.css';
 
 type DebuggingMode = {
     currentStates: Array<string>,
-    inputWord: string,
+    testWord: string,
     nextSymbolIndex: number,
     iteratingUntilEnd: Boolean,
 };
@@ -37,10 +37,10 @@ function canRunAutomaton(automaton: any): Boolean {
     return automaton.states.length > 0 && automaton.initialState;
 }
 
-function resetAutomaton(automaton: any, inputWord: string): DebuggingMode {
+function resetAutomaton(automaton: any, word: string): DebuggingMode {
     return {
         currentStates: noam.fsm.computeEpsilonClosure(automaton, [automaton.initialState]),
-        inputWord: inputWord,
+        testWord: word,
         nextSymbolIndex: 0,
         iteratingUntilEnd: false,
     };
@@ -52,24 +52,32 @@ function previousSymbol(automaton: any, db: DebuggingMode): DebuggingMode {
     }
 
     return {
-        currentStates: noam.fsm.readString(automaton, db.inputWord.substring(0, db.nextSymbolIndex - 1).split('')),
-        inputWord: db.inputWord,
+        currentStates: noam.fsm.readString(automaton, db.testWord.substring(0, db.nextSymbolIndex - 1).split('')),
+        testWord: db.testWord,
         nextSymbolIndex: db.nextSymbolIndex - 1,
         iteratingUntilEnd: false,
     };
 }
 
 function nextSymbol(automaton: any, db: DebuggingMode): DebuggingMode {
-    if (db.nextSymbolIndex >= db.inputWord.length) {
+    if (db.nextSymbolIndex >= db.testWord.length) {
         return db;
     }
 
     return {
-        currentStates: noam.fsm.makeTransition(automaton, db.currentStates, db.inputWord[db.nextSymbolIndex]),
-        inputWord: db.inputWord,
+        currentStates: noam.fsm.makeTransition(automaton, db.currentStates, db.testWord[db.nextSymbolIndex]),
+        testWord: db.testWord,
         nextSymbolIndex: db.nextSymbolIndex + 1,
         iteratingUntilEnd: db.iteratingUntilEnd,
     };
+}
+
+function isWordInLanguage(automaton: any, word: string): Boolean {
+    try {
+        return noam.fsm.isStringInLanguage(automaton, word);
+    } catch {
+        return false;
+    }
 }
 
 export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton: any) => void }> = ({ automaton, onUpdate }) => {
@@ -79,6 +87,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     const [draggingOffset, setDraggingOffset] = useState<Point>();
     const [mouseLocation, setMouseLocation] = useState<{ position: Point, state: string | null }>({ position: { x: 0, y: 0 }, state: null });
     const [debuggingMode, setDebuggingMode] = useState<DebuggingMode | null>();
+    const [testWord, setTestWord] = useState('');
 
     const doubleClickHandler = (e: React.MouseEvent) => {
         const element = e.target as Element;
@@ -235,13 +244,6 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         onUpdate(automaton);
     }
 
-    const inputWordRef: React.RefObject<Input> = React.createRef();
-
-    const testWordHandler = (e: React.MouseEvent) => {
-        const inputWord = inputWordRef && inputWordRef.current ? inputWordRef.current.input.value : '';
-        console.log(noam.fsm.isStringInLanguage(automaton, inputWord));
-    }
-
     const startDebuggingHandler = (e: React.MouseEvent) => {
         // TODO: adapt the input to be colorized and have symbols showing what is being read
         resetDebuggingHandler(e);
@@ -253,8 +255,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     }
 
     const resetDebuggingHandler = (e: React.MouseEvent) => {
-        const inputWord = inputWordRef && inputWordRef.current ? inputWordRef.current.input.value : '';
-        setDebuggingMode(resetAutomaton(automaton, inputWord));
+        setDebuggingMode(resetAutomaton(automaton, testWord));
     }
 
     const stepBackwardHandler = (e: React.MouseEvent) => {
@@ -268,7 +269,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     const fastForwardHandler = (e: React.MouseEvent) => {
         setDebuggingMode({
             currentStates: debuggingMode!.currentStates,
-            inputWord: debuggingMode!.inputWord,
+            testWord: debuggingMode!.testWord,
             nextSymbolIndex: debuggingMode!.nextSymbolIndex,
             iteratingUntilEnd: true,
         });
@@ -292,10 +293,18 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     return (
         <div className="automaton-designer">
             <div className="toolbar">
-                <Input placeholder="Write your test word" ref={inputWordRef} disabled={debuggingMode != null} />
-                <Tooltip title="Test the word">
-                    <Button icon="caret-right" disabled={debuggingMode != null || !canRunAutomaton(automaton)} onClick={testWordHandler}/>
-                </Tooltip>
+                <Input
+                    placeholder="Write your test word"
+                    disabled={debuggingMode != null}
+                    value={testWord}
+                    suffix={
+                        <Icon
+                            // theme="filled"
+                            type={testWord && isWordInLanguage(automaton, testWord) ? 'check' : 'close'}
+                            style={{ display: (!testWord ? 'none' : 'inherit') }} />
+                    }
+                    onChange={(e) => setTestWord(e.target.value)}
+                />
 
                 <Tooltip title="Start debugging">
                     {debuggingMode
