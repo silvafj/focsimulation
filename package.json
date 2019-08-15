@@ -2,6 +2,7 @@
   "name": "focsimulation",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://silvafj.github.io/focsimulation",
   "dependencies": {
     "@types/classnames": "^2.2.9",
     "@types/jest": "24.0.15",
@@ -21,10 +22,12 @@
     "viz.js": "^2.1.2"
   },
   "scripts": {
-    "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "deploy": "gh-pages -d build",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "start": "react-scripts start",
+    "test": "react-scripts test"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -42,6 +45,6 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^2.0.1"
+    "gh-pages": "^2.1.1"
   }
 }
