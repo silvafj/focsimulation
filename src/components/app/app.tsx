@@ -13,7 +13,7 @@ const { Header, Sider, Content } = Layout;
 
 function getKeyFromLocation(pathname: string): string {
   if (pathname === '/') {
-    return 'regular-language';
+    return 'automata';
   }
 
   return pathname.substr(1);
@@ -22,11 +22,11 @@ function getKeyFromLocation(pathname: string): string {
 const SiderWithRouter = withRouter(({ location, ...props }) => (
   <Sider width="300px">
     <Menu theme="dark" selectedKeys={[getKeyFromLocation(location.pathname)]}>
-      <Menu.Item key="regular-language">
-        <Link to="/regular-language">Regular language</Link>
-      </Menu.Item>
       <Menu.Item key="automata">
         <Link to="/automata">Automata</Link>
+      </Menu.Item>
+      <Menu.Item key="regular-language">
+        <Link to="/regular-language">Regular language</Link>
       </Menu.Item>
     </Menu>
   </Sider>
@@ -48,8 +48,8 @@ export const App: React.FC = () => {
         </Header>
         <SiderWithRouter />
         <Content>
-          <Route exact path={["/", "/regular-language"]} component={RegularLanguage} />
-          <Route exact path="/automata" component={Automata} />
+          <Route exact path={["/", "/automata"]} component={Automata} />
+          <Route exact path={["/regular-language"]} component={RegularLanguage} />
         </Content>
       </Layout>
     </BrowserRouter>
