@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/focsimulation/static/css/main.3e70fc5e.chunk.css",
+    "main.js": "/focsimulation/static/js/main.2a032e75.chunk.js",
+    "main.js.map": "/focsimulation/static/js/main.2a032e75.chunk.js.map",
+    "runtime~main.js": "/focsimulation/static/js/runtime~main.7bf25687.js",
+    "runtime~main.js.map": "/focsimulation/static/js/runtime~main.7bf25687.js.map",
+    "static/css/2.a317ec87.chunk.css": "/focsimulation/static/css/2.a317ec87.chunk.css",
+    "static/js/2.86a9c1cf.chunk.js": "/focsimulation/static/js/2.86a9c1cf.chunk.js",
+    "static/js/2.86a9c1cf.chunk.js.map": "/focsimulation/static/js/2.86a9c1cf.chunk.js.map",
+    "index.html": "/focsimulation/index.html",
+    "precache-manifest.139c45fc4d2be048fd794f932de58a3b.js": "/focsimulation/precache-manifest.139c45fc4d2be048fd794f932de58a3b.js",
+    "service-worker.js": "/focsimulation/service-worker.js",
+    "static/css/2.a317ec87.chunk.css.map": "/focsimulation/static/css/2.a317ec87.chunk.css.map",
+    "static/css/main.3e70fc5e.chunk.css.map": "/focsimulation/static/css/main.3e70fc5e.chunk.css.map",
+    "static/media/logo.svg": "/focsimulation/static/media/logo.5d5d9eef.svg"
+  }
+}
