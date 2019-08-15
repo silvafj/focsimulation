@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Menu } from 'antd';
-import { BrowserRouter, Route, Link, withRouter } from 'react-router-dom';
+import { HashRouter, Route, Link, withRouter } from 'react-router-dom';
 
 import RegularLanguage from '../../routes/regular-language';
 import Automata from '../../routes/automata';
@@ -11,7 +11,8 @@ import './app.css';
 
 const { Header, Sider, Content } = Layout;
 
-function getKeyFromLocation(pathname: string): string {
+function getKeyFromLocation(pathname: string, location: any): string {
+  console.log(pathname, location);
   if (pathname === '/') {
     return 'automata';
   }
@@ -21,7 +22,7 @@ function getKeyFromLocation(pathname: string): string {
 
 const SiderWithRouter = withRouter(({ location, ...props }) => (
   <Sider width="300px">
-    <Menu theme="dark" selectedKeys={[getKeyFromLocation(location.pathname)]}>
+    <Menu theme="dark" selectedKeys={[getKeyFromLocation(location.pathname, location)]}>
       <Menu.Item key="automata">
         <Link to="/automata">Automata</Link>
       </Menu.Item>
@@ -34,7 +35,7 @@ const SiderWithRouter = withRouter(({ location, ...props }) => (
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Layout>
         <Header>
           <div className="logo">
@@ -52,6 +53,6 @@ export const App: React.FC = () => {
           <Route exact path={["/regular-language"]} component={RegularLanguage} />
         </Content>
       </Layout>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
