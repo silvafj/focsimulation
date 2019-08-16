@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import {
+  HashRouter,
+  Link,
+  Route,
+  RouteComponentProps,
+  withRouter,
+} from 'react-router-dom';
+import ReactGA, { FieldsObject } from 'react-ga';
 import { Layout, Menu } from 'antd';
-import { HashRouter, Route, Link, withRouter } from 'react-router-dom';
 
 import RegularLanguage from '../../routes/regular-language';
 import Automata from '../../routes/automata';
@@ -11,8 +18,27 @@ import './app.css';
 
 const { Header, Sider, Content } = Layout;
 
+ReactGA.initialize('UA-50201175-2');
+
+const withTracker = <P extends RouteComponentProps>(
+  WrappedComponent: React.ComponentType<P>,
+  options: FieldsObject = {},
+) => {
+  const trackPage = (page: string) => {
+    ReactGA.set({ page, ...options });
+    ReactGA.pageview(page);
+  };
+
+  return (props: P) => {
+    useEffect(() => {
+      trackPage(props.location.pathname);
+    }, [props.location.pathname]);
+
+    return <WrappedComponent {...props} />;
+  };
+}
+
 function getKeyFromLocation(pathname: string, location: any): string {
-  console.log(pathname, location);
   if (pathname === '/') {
     return 'automata';
   }
@@ -49,8 +75,8 @@ export const App: React.FC = () => {
         </Header>
         <SiderWithRouter />
         <Content>
-          <Route exact path={["/", "/automata"]} component={Automata} />
-          <Route exact path={["/regular-language"]} component={RegularLanguage} />
+          <Route exact path={["/", "/automata"]} component={withTracker(Automata)} />
+          <Route exact path={["/regular-language"]} component={withTracker(RegularLanguage)} />
         </Content>
       </Layout>
     </HashRouter>
