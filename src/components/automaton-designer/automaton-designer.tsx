@@ -7,6 +7,7 @@ import noam from 'noam';
 
 import { Edge } from './edge/edge';
 import { Node } from './node/node';
+import { Help } from './help/help';
 import {
     getStateFromElement,
     getMousePosition,
@@ -290,6 +291,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
     /** TODO:
      * curved links - to organise them better in the screen
+     * add the help icon to the top left of the designer
+     * add samples (also to regular language)
+     * add quizes (also to regular language)
      */
     return (
         <div className="automaton-designer">
@@ -376,6 +380,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                         {linkingEdge}
                     </svg>
                 </Hotkeys>
+                <Help />
             </div>
         </div>
     );

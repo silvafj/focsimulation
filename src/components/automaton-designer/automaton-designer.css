@@ -13,12 +13,11 @@
 
 .automaton-designer .toolbar>*:first-child {
     margin-left: 0;
-    min-width: 180px;
-    line-height: 32px;
 }
 
-.automaton-designer .toolbar .debugging-symbols {
-    padding-left: 11px;
+.automaton-designer .toolbar .ant-input-affix-wrapper {
+    min-width: 180px;
+    line-height: 32px;
 }
 
 .automaton-designer .toolbar .debugging-symbols>* {
@@ -57,4 +56,11 @@
     position: absolute;
     top: 0;
     width: 100%;
+}
+
+.automaton-designer .container .anticon-question-circle {
+    color: rgba(0, 0, 0, 0.45);
+    position: absolute;
+    top: 4px;
+    left: 4px;
 }
