@@ -14,7 +14,7 @@ export const Node: React.FC<{
     current: boolean
 }> = ({ automaton, state, selected, dragging, current }) => {
 
-    const position: Point = automaton.statePositions[state];
+    const position: Point = automaton.statePositions.get(state);
     const translate = `translate(${fixed(position.x)},${fixed(position.y)})`;
 
     const isAccepting: boolean = noam.fsm.isAcceptingState(automaton, state);

@@ -75,7 +75,7 @@ export const Edge: React.FC<{
         var textAngle = Math.atan2(to.x - from.x, from.y - to.y);
         label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
     } else {
-        const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : automaton.transitionAngles[`${fromState}-${toState}`];
+        const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : automaton.transitionAngles.get(`${fromState}-${toState}`);
         const stuff = getEndPointsAndCircle(from, fromRadius, anchorAngle);
 
         if (stuff.endAngle < stuff.startAngle) {

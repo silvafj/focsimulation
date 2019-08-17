@@ -11,7 +11,6 @@ export const Automata: React.FC = () => {
 
     return (
         <Layout>
-            <h1>Automata</h1>
             <AutomatonDesigner automaton={automaton} onUpdate={(automaton) => setAutomaton(automaton)} />
         </Layout>
     );

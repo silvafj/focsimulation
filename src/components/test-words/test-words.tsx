@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from 'antd';
 import noam from 'noam';
 
@@ -32,10 +32,14 @@ function renderResultsHTML(automaton: any, words: Array<string>, expected: boole
     return results.join('');
 }
 
-export const TestWords: React.FC<{ automaton: any, testAccept: boolean }> = ({ automaton, testAccept }) => {
-    const [words, setWords] = useState('');
-
+export const TestWords: React.FC<{
+    automaton: any,
+    words: Array<string>,
+    testAccept: boolean,
+    onChange: (words: Array<string>) => void,
+}> = ({ automaton, words, testAccept, onChange }) => {
     const testType: string = (testAccept ? 'Accept' : 'Reject');
+    console.log(words);
 
     return (
         <div className={'test-words ' + testType.toLowerCase()}>
@@ -45,12 +49,14 @@ export const TestWords: React.FC<{ automaton: any, testAccept: boolean }> = ({ a
                 <div className="backdrop">
                     <div className="highlights" dangerouslySetInnerHTML={{
                         __html:
-                            renderResultsHTML(automaton, words.split('\n'), testAccept)
+                            renderResultsHTML(automaton, words, testAccept)
                     }}>
                     </div>
                 </div>
-                <Input.TextArea rows={8}
-                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setWords(event.target.value)}
+                <Input.TextArea
+                    rows={8}
+                    value={words.join('\n')}
+                    onChange={e => onChange(e.target.value.split('\n'))}
                 />
             </div>
         </div>

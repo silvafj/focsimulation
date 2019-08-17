@@ -1,6 +1,7 @@
 import noam from 'noam';
 
 import { Point } from '../../utils/math';
+import { string } from 'prop-types';
 
 export function getMousePosition(e: React.MouseEvent, offset: Point = { x: 0, y: 0 }): Point {
     const svg = e.currentTarget as SVGSVGElement;
@@ -37,7 +38,7 @@ export function getTransitionFromElement(element: Element): { from: string, to: 
 }
 
 export function getStatePosition(automaton: any, state: string): Point {
-    const position = automaton.statePositions[state];
+    const position = automaton.statePositions.get(state);
     return {
         x: position.x + 22,
         y: position.y + 22,
@@ -63,10 +64,10 @@ export function setAcceptingState(automaton: any, state: string, accepting: bool
 export function addState(automaton: any, state: string, position: Point): void {
     noam.fsm.addState(automaton, state);
     if (!automaton.statePositions) {
-        automaton.statePositions = [];
+        automaton.statePositions = new Map<string, Point>();
     }
 
-    automaton.statePositions[state] = position;
+    automaton.statePositions.set(state, position);
 
     if (automaton.states.length === 1) {
         noam.fsm.setInitialState(automaton, state);
@@ -78,7 +79,7 @@ export function removeState(automaton: any, state: string): void {
         automaton.initialState = '';
     }
     automaton.states = automaton.states.filter((s: string) => s !== state);
-    delete automaton.statePositions[state];
+    automaton.statePositions.delete(state);
     automaton.acceptingStates = automaton.acceptingStates.filter((s: string) => s !== state);
     automaton.transitions.map((t: NoamAutomatonTransition) => t.toStates.filter((s: string) => s !== state));
     automaton.transitions = automaton.transitions.filter(
@@ -88,7 +89,7 @@ export function removeState(automaton: any, state: string): void {
 }
 
 export function removeTransition(automaton: any, key: string): void {
-    delete automaton.transitionAngles[key];
+    automaton.transitionAngles.delete(key);
 
     const [fromState, toState] = key.split('-');
     automaton.transitions = automaton.transitions.filter(
@@ -115,9 +116,9 @@ export function updateTransitions(
 
         if (transitionAngle) {
             if (!automaton.transitionAngles) {
-                automaton.transitionAngles = [];
+                automaton.transitionAngles = new Map<string, number>();
             }
-            automaton.transitionAngles[`${transition.from}-${transition.to}`] = transitionAngle;
+            automaton.transitionAngles.set(`${transition.from}-${transition.to}`, transitionAngle);
         }
     }
 

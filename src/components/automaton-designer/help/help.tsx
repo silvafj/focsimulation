@@ -20,8 +20,8 @@ export const Help: React.FC = () => {
             content={
                 <div className="automaton-designer-help">
                     <ul>{
-                        Array.from(actions, ([action, hint]) =>
-                            <li>
+                        Array.from(actions, ([action, hint], i) =>
+                            <li key={i}>
                                 <span className="action">{action}</span>
                                 <span className="hint">{hint}</span>
                             </li>)

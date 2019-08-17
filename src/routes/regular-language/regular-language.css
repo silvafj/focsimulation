@@ -8,6 +8,19 @@
     white-space: nowrap;
 }
 
+.ant-layout-content .toolbar {
+    width: 100%;
+    display: inline-flex;
+}
+
+.ant-layout-content .toolbar>* {
+    margin-left: 4px;
+}
+
+.ant-layout-content .toolbar>*:first-child {
+    margin-left: 0;
+}
+
 .ant-layout-content .test-words.accept {
     padding-bottom: 4px;
 }

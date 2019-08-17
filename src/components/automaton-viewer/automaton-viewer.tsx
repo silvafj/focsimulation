@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import noam from 'noam';
 import Viz from 'viz.js';
 import { Module, render } from 'viz.js/full.render.js';
@@ -37,7 +37,9 @@ function renderAutomaton(automaton: any, automatonParent: React.RefObject<HTMLDi
 export const AutomatonViewer: React.FC<{ automaton: any }> = ({ automaton }) => {
     const automatonParent: React.RefObject<HTMLDivElement> = React.createRef();
 
-    renderAutomaton(automaton, automatonParent);
+    // Rendering the automaton is done directly and bypasss React reconciliation
+    // Avoid rendering if the automaton has not changed
+    useMemo(() => renderAutomaton(automaton, automatonParent), [automaton]);
 
     return (
         <div className="automaton-viewer-container" ref={automatonParent} />

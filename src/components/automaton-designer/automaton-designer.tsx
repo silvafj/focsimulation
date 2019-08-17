@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import classNames from 'classnames';
 import Hotkeys from 'react-hot-keys';
 import { HotkeysEvent } from 'hotkeys-js';
-import { Input, Button, Tooltip, Icon } from 'antd';
+import { Input, Button, Tooltip, Icon, Dropdown } from 'antd';
+import Menu, { ClickParam } from 'antd/lib/menu';
+import SubMenu from 'antd/lib/menu/SubMenu';
 import noam from 'noam';
 
 import { Edge } from './edge/edge';
@@ -21,6 +23,7 @@ import {
     getNextState,
     removeTransition
 } from './helpers';
+import { Examples } from './examples';
 import { Point, angleOfLine } from '../../utils/math';
 
 import './automaton-designer.css';
@@ -130,9 +133,10 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
             switch (draggingMode) {
                 case DraggingMode.DRAGGING:
+                    const statePosition = automaton.statePositions.get(state);
                     setDraggingOffset({
-                        x: automaton.statePositions[state].x - currentPosition.x,
-                        y: automaton.statePositions[state].y - currentPosition.y,
+                        x: statePosition.x - currentPosition.x,
+                        y: statePosition.y - currentPosition.y,
                     });
                     break;
                 case DraggingMode.LINKING:
@@ -156,7 +160,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
             case DraggingMode.DRAGGING:
                 automaton = { ...automaton };
                 if (selectedObject && selectedObject.type === ObjectType.NODE) {
-                    automaton.statePositions[selectedObject.key] = getMousePosition(e, draggingOffset);
+                    automaton.statePositions.set(selectedObject.key, getMousePosition(e, draggingOffset));
                 }
                 onUpdate(automaton);
                 break;
@@ -287,14 +291,37 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         return () => clearInterval(intervalId);
     }, [debuggingMode, automaton]);
 
+    const handleOptionsMenuClick = (click: ClickParam) => {
+        if (click.key.startsWith('example')) {
+            const index = Number(click.key.split('-')[1]);
+            setTestWord(Examples[index].testWord);
+            onUpdate(Examples[index].automaton);
+        }
+    }
+
     /** TODO:
      * curved links - to organise them better in the screen
-     * add samples (also to regular language)
      * add quizes (also to regular language)
      */
     return (
         <div className="automaton-designer">
             <div className="toolbar">
+                <Dropdown
+                    placement="bottomLeft"
+                    trigger={['click']}
+                    disabled={Boolean(debuggingMode)}
+                    overlay={
+                        <Menu onClick={handleOptionsMenuClick}>
+                            <SubMenu title="Examples">
+                                {
+                                    Examples.map((v, i) => <Menu.Item key={`example-${i}`}>{v.title}</Menu.Item>)
+                                }
+                            </SubMenu>
+                        </Menu>
+                    }>
+                    <Button icon="menu" />
+                </Dropdown>
+
                 {debuggingMode
                     ? <span className="ant-input-affix-wrapper debugging-symbols">{
                         debuggingMode.testWord.split('').map((symbol, index) => {
@@ -303,7 +330,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                                 current: index === debuggingMode.nextSymbolIndex,
                             });
 
-                            return <span className={symbolClass}>{symbol}</span>;
+                            return <span key={index} className={symbolClass}>{symbol}</span>;
                         })
                     }
                     </span>
