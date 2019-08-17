@@ -6,6 +6,7 @@ import { Input, Button, Tooltip, Icon, Dropdown } from 'antd';
 import Menu, { ClickParam } from 'antd/lib/menu';
 import SubMenu from 'antd/lib/menu/SubMenu';
 import noam from 'noam';
+import clone from 'clone';
 
 import { Edge } from './edge/edge';
 import { Node } from './node/node';
@@ -183,11 +184,13 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
             if (toState && selectedObject && selectedObject.type === ObjectType.NODE) {
                 const symbol = prompt("What is the transition symbol?");
                 automaton = { ...automaton };
+                console.log(angleOfLine(getStatePosition(automaton, selectedObject.key), getMousePosition(e)));
                 automaton = updateTransitions(
                     automaton,
                     {
                         from: selectedObject.key,
-                        to: toState, symbol: ''
+                        to: toState,
+                        symbol: '',
                     },
                     symbol || '',
                     angleOfLine(getStatePosition(automaton, selectedObject.key), getMousePosition(e))
@@ -295,12 +298,12 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         if (click.key.startsWith('example')) {
             const index = Number(click.key.split('-')[1]);
             setTestWord(Examples[index].testWord);
-            onUpdate(Examples[index].automaton);
+            onUpdate(clone(Examples[index].automaton));
         }
     }
 
     /** TODO:
-     * curved links - to organise them better in the screen
+     * check if automaton is equivalent to regular expression
      * add quizes (also to regular language)
      */
     return (

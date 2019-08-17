@@ -5,6 +5,7 @@
   "homepage": "https://silvafj.github.io/focsimulation",
   "dependencies": {
     "@types/classnames": "^2.2.9",
+    "@types/clone": "^0.1.30",
     "@types/jest": "24.0.15",
     "@types/node": "12.6.8",
     "@types/react": "16.8.23",
@@ -12,6 +13,7 @@
     "@types/react-router-dom": "^4.3.4",
     "antd": "^3.21.4",
     "classnames": "^2.2.6",
+    "clone": "^2.1.2",
     "noam": "git+https://github.com/izuzak/noam.git",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",

@@ -19,16 +19,76 @@ function getStateRadius(automaton: any, state: string): number {
     return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
 }
 
+/**
+ * Returns the commands required to draw a line with SVG path element.
+ *
+ * @param from
+ * @param to
+ */
+function lineto(from: Point, to: Point): Array<string> {
+    // The "lineto" commands
+    // https://www.w3.org/TR/SVG/paths.html#PathDataLinetoCommands
+    return [
+        `M${fixed(from.x)},${fixed(from.y)}`, // starting point
+        `L${fixed(to.x)},${fixed(to.y)}`, // end point
+    ]
+}
+
+/**
+ * Returns the commands required to draw an arc with SVG path element.
+ *
+ * @param x
+ * @param y
+ * @param radius
+ * @param startAngle
+ * @param endAngle
+ * @param isReversed
+ */
+function arc(
+    x: number,
+    y: number,
+    radius: number,
+    startAngle: number,
+    endAngle: number,
+    isReversed: Boolean = false,
+): Array<string> {
+    if (isReversed) {
+        [startAngle, endAngle] = [endAngle, startAngle];
+    }
+
+    if (endAngle < startAngle) {
+        endAngle += Math.PI * 2;
+    }
+
+    const startX = x + radius * Math.cos(startAngle);
+    const startY = y + radius * Math.sin(startAngle);
+    const endX = x + radius * Math.cos(endAngle);
+    const endY = y + radius * Math.sin(endAngle);
+    const useGreaterThan180 = (Math.abs(endAngle - startAngle) > Math.PI) ? '1' : '0';
+
+    // The elliptical arc curve commands
+    // https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands
+    return [
+        `M${fixed(startX)},${fixed(startY)}`, // starting point
+        `A${fixed(radius)},${fixed(radius)}`, // radii
+        '0', // perfect circle
+        useGreaterThan180 ? '1' : '0', // large-arc-flag
+        '1', // sweep-flag, arc drawn in a positive angle
+        `${fixed(endX)},${fixed(endY)}`, // end point
+    ];
+}
+
 function getEndPointsAndCircle(circle: Point, radius: number, anchorAngle: number) {
-    var circleX = circle.x + 1.5 * radius * Math.cos(anchorAngle);
-    var circleY = circle.y + 1.5 * radius * Math.sin(anchorAngle);
-    var circleRadius = 0.75 * radius;
-    var startAngle = anchorAngle - Math.PI * 0.8;
-    var endAngle = anchorAngle + Math.PI * 0.8;
-    var startX = circleX + circleRadius * Math.cos(startAngle);
-    var startY = circleY + circleRadius * Math.sin(startAngle);
-    var endX = circleX + circleRadius * Math.cos(endAngle);
-    var endY = circleY + circleRadius * Math.sin(endAngle);
+    const circleX = circle.x + 1.5 * radius * Math.cos(anchorAngle);
+    const circleY = circle.y + 1.5 * radius * Math.sin(anchorAngle);
+    const circleRadius = 0.75 * radius;
+    const startAngle = anchorAngle - Math.PI * 0.8;
+    const endAngle = anchorAngle + Math.PI * 0.8;
+    const startX = circleX + circleRadius * Math.cos(startAngle);
+    const startY = circleY + circleRadius * Math.sin(startAngle);
+    const endX = circleX + circleRadius * Math.cos(endAngle);
+    const endY = circleY + circleRadius * Math.sin(endAngle);
+
     return {
         startX: startX,
         startY: startY,
@@ -51,7 +111,7 @@ export const Edge: React.FC<{
     selected: boolean,
     dragging: boolean,
 }> = ({ automaton, fromState, toState, symbol, mousePosition, selected, dragging }) => {
-    const commands: Array<string> = [];
+    var pathD: Array<string> = [];
 
     var from = getStatePosition(automaton, fromState);
     const fromRadius = getStateRadius(automaton, fromState);
@@ -65,10 +125,15 @@ export const Edge: React.FC<{
         from = closestPointOnCircle({ cx: from.x, cy: from.y, r: fromRadius }, mpoint);
         to = toState ? closestPointOnCircle({ cx: to.x, cy: to.y, r: getStateRadius(automaton, toState) }, from) : mpoint;
 
-        // The "lineto" commands
-        // https://www.w3.org/TR/SVG/paths.html#PathDataLinetoCommands
-        commands.push(`M${fixed(from.x)},${fixed(from.y)}`); // starting point
-        commands.push(`L${fixed(to.x)},${fixed(to.y)}`); // end point
+        // TODO: arc edges between two nodes
+
+        // const anchorAngle: number = toState && automaton.transitionAngles ? automaton.transitionAngles.get(`${fromState}-${toState}`) : 0;
+        // if (anchorAngle) {
+        //     const stuff = getEndPointsAndCircle(from, fromRadius, anchorAngle);
+        //     pathD = arc(stuff.circleX, stuff.circleY, stuff.circleRadius, stuff.startAngle, stuff.endAngle);
+        // } else {
+        pathD = lineto(from, to);
+        // }
 
         arrow = <EdgeArrow point={to} angle={Math.atan2(to.y - from.y, to.x - from.x)} />;
 
@@ -78,26 +143,10 @@ export const Edge: React.FC<{
         const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : automaton.transitionAngles.get(`${fromState}-${toState}`);
         const stuff = getEndPointsAndCircle(from, fromRadius, anchorAngle);
 
-        if (stuff.endAngle < stuff.startAngle) {
-            stuff.endAngle += Math.PI * 2;
-        }
-
-        const startX = stuff.circleX + stuff.circleRadius * Math.cos(stuff.startAngle);
-        const startY = stuff.circleY + stuff.circleRadius * Math.sin(stuff.startAngle);
-        const endX = stuff.circleX + stuff.circleRadius * Math.cos(stuff.endAngle);
-        const endY = stuff.circleY + stuff.circleRadius * Math.sin(stuff.endAngle);
-        const useGreaterThan180 = (Math.abs(stuff.endAngle - stuff.startAngle) > Math.PI) ? '1' : '0';
-
-        // The elliptical arc curve commands
-        // https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands
-        commands.push(`M${fixed(startX)},${fixed(startY)}`); // starting point
-        commands.push(`A${fixed(stuff.circleRadius)},${fixed(stuff.circleRadius)}`); // radii
-        commands.push('0'); // perfect circle
-        commands.push(useGreaterThan180); // large-arc-flag
-        commands.push('1'); // sweep-flag, arc drawn in a positive angle
-        commands.push(`${fixed(endX)},${fixed(endY)}`); // end point
+        pathD = arc(stuff.circleX, stuff.circleY, stuff.circleRadius, stuff.startAngle, stuff.endAngle, false);
 
         arrow = <EdgeArrow point={{ x: stuff.endX, y: stuff.endY }} angle={stuff.endAngle + Math.PI * 0.4} />;
+
         label = <EdgeLabel point={{
             x: stuff.circleX + stuff.circleRadius * Math.cos(anchorAngle),
             y: stuff.circleY + stuff.circleRadius * Math.sin(anchorAngle),
@@ -122,7 +171,7 @@ export const Edge: React.FC<{
 
     return (
         <g className={edgeClass} {...dataProps}>
-            <path className="line" d={commands.join(' ')} />
+            <path className="line" d={pathD.join(' ')} />
             {arrow}
             {label}
         </g>
