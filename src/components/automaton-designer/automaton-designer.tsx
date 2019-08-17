@@ -247,12 +247,10 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
     }
 
     const startDebuggingHandler = (e: React.MouseEvent) => {
-        // TODO: adapt the input to be colorized and have symbols showing what is being read
         resetDebuggingHandler(e);
     }
 
     const stopDebuggingHandler = (e: React.MouseEvent) => {
-        // TODO: revert to normal input
         setDebuggingMode(null);
     }
 
@@ -291,7 +289,6 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
     /** TODO:
      * curved links - to organise them better in the screen
-     * add the help icon to the top left of the designer
      * add samples (also to regular language)
      * add quizes (also to regular language)
      */

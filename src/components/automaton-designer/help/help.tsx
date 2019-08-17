@@ -4,24 +4,30 @@ import { Icon, Popover } from 'antd';
 import './help.css';
 
 export const Help: React.FC = () => {
-    const content = (
-        <div className="automaton-designer-help">
-            <ul>
-                <li><span className="action">Add a state</span> <span className="hint"><kbd>🖰 double click</kbd> on empty canvas</span></li>
-                <li><span className="action">Toggle accept state</span> <span className="hint"><kbd>🖰 double click</kbd> or <kbd><kbd>shift</kbd> + <kbd>a</kbd></kbd></span></li>
-                <li><span className="action">Mark state as initial</span> <span className="hint"><kbd><kbd>shift</kbd> + <kbd>i</kbd></kbd></span></li>
-                <li><span className="action">Move a state</span> <span className="hint"><kbd>🖰 click</kbd> and drag</span></li>
-                <li><span className="action">Add a transition</span> <span className="hint"><kbd><kbd>shift</kbd> + <kbd>🖰 click</kbd></kbd> and drag</span></li>
-                <li><span className="action">Delete a state or transition</span> <span className="hint"><kbd>delete</kbd></span></li>
-                <li><span className="action">Update a transition symbol</span> <span className="hint"><kbd>🖰 double click</kbd></span></li>
-            </ul >
-        </div >
-    );
+    const actions: Map<string, JSX.Element> = new Map([
+        ['Add a state', <><kbd>🖰 double click</kbd> on empty canvas</>],
+        ['Toggle accept state', <><kbd>🖰 double click</kbd> or <kbd><kbd>shift</kbd> + <kbd>a</kbd></kbd></>],
+        ['Mark state as initial', <><kbd><kbd>shift</kbd> + <kbd>i</kbd></kbd></>],
+        ['Move a state', <><kbd>🖰 click</kbd> and drag</>],
+        ['Add a transition', <><kbd><kbd>shift</kbd> + <kbd>🖰 click</kbd></kbd> and drag</>],
+        ['Delete a state or transition', <><kbd>delete</kbd></>],
+        ['Update a transition symbol', <><kbd>🖰 double click</kbd></>],
+    ]);
 
     return (
         <Popover placement="rightTop"
             title="How to use the automaton designer?"
-            content={content}>
+            content={
+                <div className="automaton-designer-help">
+                    <ul>{
+                        Array.from(actions, ([action, hint]) =>
+                            <li>
+                                <span className="action">{action}</span>
+                                <span className="hint">{hint}</span>
+                            </li>)
+                    }</ul>
+                </div>
+            }>
             <Icon type="question-circle" />
         </Popover>
     );
