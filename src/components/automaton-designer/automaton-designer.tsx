@@ -97,7 +97,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
     const doubleClickHandler = (e: React.MouseEvent) => {
         const element = e.target as Element;
-        automaton = { ...automaton };
+        automaton = clone(automaton, false);
 
         const state = getStateFromElement(element);
         if (state) {
@@ -159,7 +159,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
         switch (draggingMode) {
             case DraggingMode.DRAGGING:
-                automaton = { ...automaton };
+                automaton = clone(automaton, false);
                 if (selectedObject && selectedObject.type === ObjectType.NODE) {
                     automaton.statePositions.set(selectedObject.key, getMousePosition(e, draggingOffset));
                 }
@@ -183,8 +183,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
             if (toState && selectedObject && selectedObject.type === ObjectType.NODE) {
                 const symbol = prompt("What is the transition symbol?");
-                automaton = { ...automaton };
-                console.log(angleOfLine(getStatePosition(automaton, selectedObject.key), getMousePosition(e)));
+                automaton = clone(automaton, false);
                 automaton = updateTransitions(
                     automaton,
                     {
@@ -193,7 +192,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                         symbol: '',
                     },
                     symbol || '',
-                    angleOfLine(getStatePosition(automaton, selectedObject.key), getMousePosition(e))
+                    selectedObject.key === toState
+                        ? angleOfLine(getStatePosition(automaton, selectedObject.key), getMousePosition(e))
+                        : 0
                 );
 
                 onUpdate(automaton);
@@ -224,7 +225,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
             return;
         }
 
-        automaton = { ...automaton };
+        automaton = clone(automaton, false);
         switch (shortcut) {
             case 'delete': // Remove current element
                 setSelectedObject(null);
@@ -298,7 +299,7 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         if (click.key.startsWith('example')) {
             const index = Number(click.key.split('-')[1]);
             setTestWord(Examples[index].testWord);
-            onUpdate(clone(Examples[index].automaton));
+            onUpdate(clone(Examples[index].automaton, false));
         }
     }
 

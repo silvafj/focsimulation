@@ -4,17 +4,20 @@
     pointer-events: bounding-box;
 }
 
-.automaton-designer .container>svg .node.current circle:first-of-type {
+.automaton-designer .container>svg .node circle {
+    fill: white;
+}
+
+.automaton-designer .container>svg .node.current circle {
     fill: lightpink;
+}
+
+.automaton-designer .container>svg .node.selected {
+    stroke: blue;
 }
 
 .automaton-designer .container>svg .node.dragging {
     cursor: move;
-}
-
-.automaton-designer .container>svg .node.selected circle,
-.automaton-designer .container>svg .node.selected polyline {
-    stroke: blue;
 }
 
 .automaton-designer .container>svg .node text {

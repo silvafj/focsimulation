@@ -37,8 +37,8 @@ export const Node: React.FC<{
     return (
         <g className={nodeClass} transform={translate} data-state={state}>
             {initialStateArrow}
-            <circle cx="22" cy="22" r="18" />
             {isAccepting ? <circle cx="22" cy="22" r="22" /> : null}
+            <circle cx="22" cy="22" r="18" />
             <text x="22" y="27">{state}</text>
         </g>
     );
