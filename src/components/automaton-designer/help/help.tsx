@@ -21,16 +21,15 @@ export const Help: React.FC<{
             placement="rightTop"
             title="How to use the automaton designer?"
             defaultVisible={open}
+            overlayClassName="automaton-designer-help"
             content={
-                <div className="automaton-designer-help">
-                    <ul>{
-                        Array.from(actions, ([action, hint], i) =>
-                            <li key={i}>
-                                <span className="action">{action}</span>
-                                <span className="hint">{hint}</span>
-                            </li>)
-                    }</ul>
-                </div>
+                <ul>{
+                    Array.from(actions, ([action, hint], i) =>
+                        <li key={i}>
+                            <span className="action">{action}</span>
+                            <span className="hint">{hint}</span>
+                        </li>)
+                }</ul>
             }>
             <Icon type="question-circle" />
         </Popover>

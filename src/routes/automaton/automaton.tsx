@@ -4,9 +4,9 @@ import noam from 'noam';
 
 import AutomatonDesigner from '../../components/automaton-designer';
 
-import './automata.css';
+import './automaton.css';
 
-export const Automata: React.FC = () => {
+export const Automaton: React.FC = () => {
     const [automaton, setAutomaton] = useState(noam.fsm.makeNew);
 
     return (

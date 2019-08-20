@@ -10,7 +10,7 @@ import ReactGA, { FieldsObject } from 'react-ga';
 import { Layout, Menu } from 'antd';
 
 import RegularLanguage from '../../routes/regular-language';
-import Automata from '../../routes/automata';
+import Automaton from '../../routes/automaton';
 
 import logo from '../../assets/logo.svg';
 
@@ -40,7 +40,7 @@ const withTracker = <P extends RouteComponentProps>(
 
 function getKeyFromLocation(pathname: string, location: any): string {
   if (pathname === '/') {
-    return 'automata';
+    return 'automaton';
   }
 
   return pathname.substr(1);
@@ -49,8 +49,8 @@ function getKeyFromLocation(pathname: string, location: any): string {
 const SiderWithRouter = withRouter(({ location, ...props }) => (
   <Sider width="300px">
     <Menu theme="dark" selectedKeys={[getKeyFromLocation(location.pathname, location)]}>
-      <Menu.Item key="automata">
-        <Link to="/automata">Automata</Link>
+      <Menu.Item key="automaton">
+        <Link to="/automaton">Automaton</Link>
       </Menu.Item>
       <Menu.Item key="regular-language">
         <Link to="/regular-language">Regular language</Link>
@@ -75,7 +75,7 @@ export const App: React.FC = () => {
         </Header>
         <SiderWithRouter />
         <Content>
-          <Route exact path={["/", "/automata"]} component={withTracker(Automata)} />
+          <Route exact path={["/", "/automaton"]} component={withTracker(Automaton)} />
           <Route exact path={["/regular-language"]} component={withTracker(RegularLanguage)} />
         </Content>
       </Layout>
