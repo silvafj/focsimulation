@@ -45,6 +45,10 @@
     overflow: hidden;
 }
 
+.test-words .highlights span {
+    white-space: nowrap;
+}
+
 .test-words .highlights span.valid {
     background: #bfb;
     display: block;
@@ -56,9 +60,10 @@
 }
 
 .test-words textarea {
-    resize: none;
+    background-color: transparent;
     display: block;
     overflow-x: hidden;
     overflow-y: auto;
-    background-color: transparent;
+    resize: none;
+    white-space: nowrap;
 }
