@@ -9,8 +9,9 @@ import {
 import ReactGA, { FieldsObject } from 'react-ga';
 import { Layout, Menu } from 'antd';
 
-import RegularLanguage from '../../routes/regular-language';
 import Automaton from '../../routes/automaton';
+import Practice from '../../routes/practice';
+import RegularLanguage from '../../routes/regular-language';
 
 import logo from '../../assets/logo.svg';
 
@@ -55,6 +56,9 @@ const SiderWithRouter = withRouter(({ location, ...props }) => (
       <Menu.Item key="regular-language">
         <Link to="/regular-language">Regular language</Link>
       </Menu.Item>
+      <Menu.Item key="practice">
+        <Link to="/practice">Practice questions</Link>
+      </Menu.Item>
     </Menu>
   </Sider>
 ));
@@ -77,6 +81,7 @@ export const App: React.FC = () => {
         <Content>
           <Route exact path={["/", "/automaton"]} component={withTracker(Automaton)} />
           <Route exact path={["/regular-language"]} component={withTracker(RegularLanguage)} />
+          <Route exact path={["/practice"]} component={withTracker(Practice)} />
         </Content>
       </Layout>
     </HashRouter>

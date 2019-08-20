@@ -305,7 +305,6 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
 
     /** TODO:
      * check if automaton is equivalent to regular expression
-     * add quizes (also to regular language)
      */
     return (
         <div className="automaton-designer">
