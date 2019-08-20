@@ -39,7 +39,6 @@ export const TestWords: React.FC<{
     onChange: (words: Array<string>) => void,
 }> = ({ automaton, words, testAccept, onChange }) => {
     const testType: string = (testAccept ? 'Accept' : 'Reject');
-    console.log(words);
 
     return (
         <div className={'test-words ' + testType.toLowerCase()}>

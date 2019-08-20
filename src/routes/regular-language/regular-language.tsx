@@ -112,7 +112,7 @@ export const RegularLanguage: React.FC = () => {
             <h1>Words</h1>
             <TestWords automaton={automaton} words={acceptWords} testAccept={true} onChange={words => setAcceptWords(words)} />
             <TestWords automaton={automaton} words={rejectWords} testAccept={false} onChange={words => setRejectWords(words)} />
-            <h1>Deterministic Finite Automaton</h1>
+            <h1>Automaton</h1>
             <AutomatonViewer automaton={automaton} />
         </Layout>
     );

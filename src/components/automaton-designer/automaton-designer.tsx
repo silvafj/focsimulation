@@ -303,8 +303,6 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         }
     }
 
-    console.log(!automaton || !automaton.states || automaton.states.length === 0, automaton);
-
     /** TODO:
      * check if automaton is equivalent to regular expression
      * add quizes (also to regular language)
