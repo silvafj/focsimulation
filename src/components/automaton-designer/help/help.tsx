@@ -3,7 +3,9 @@ import { Icon, Popover } from 'antd';
 
 import './help.css';
 
-export const Help: React.FC = () => {
+export const Help: React.FC<{
+    open: boolean,
+}> = ({ open }) => {
     const actions: Map<string, JSX.Element> = new Map([
         ['Add a state', <><kbd>🖰 double click</kbd> on empty canvas</>],
         ['Toggle accept state', <><kbd>🖰 double click</kbd> or <kbd><kbd>shift</kbd> + <kbd>a</kbd></kbd></>],
@@ -15,8 +17,10 @@ export const Help: React.FC = () => {
     ]);
 
     return (
-        <Popover placement="rightTop"
+        <Popover
+            placement="rightTop"
             title="How to use the automaton designer?"
+            defaultVisible={open}
             content={
                 <div className="automaton-designer-help">
                     <ul>{
