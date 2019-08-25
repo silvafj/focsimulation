@@ -37,7 +37,7 @@ function renderAutomaton(automaton: any, automatonParent: React.RefObject<HTMLDi
 export const AutomatonViewer: React.FC<{ automaton: any }> = ({ automaton }) => {
     const automatonParent = useRef<HTMLDivElement>(null);
 
-    // Rendering the automaton is done directly and bypasss React reconciliation
+    // Rendering the automaton is done directly and bypass React reconciliation
     // Avoid rendering if the automaton has not changed
     useMemo(() => renderAutomaton(automaton, automatonParent), [automaton]);
 
