@@ -19,7 +19,7 @@ import './app.css';
 
 const { Header, Sider, Content } = Layout;
 
-ReactGA.initialize('UA-50201175-2');
+ReactGA.initialize('UA-50201175-2', { testMode: process.env.NODE_ENV !== 'production' });
 
 const withTracker = <P extends RouteComponentProps>(
   WrappedComponent: React.ComponentType<P>,
