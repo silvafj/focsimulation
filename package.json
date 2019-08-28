@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "https://silvafj.github.io/focsimulation",
+  "author": {
+    "name": "Fernando Silva",
+    "email": "fsilva.pt@gmail.com"
+  },
   "dependencies": {
     "@types/classnames": "^2.2.9",
     "@types/clone": "^0.1.30",
@@ -11,7 +15,7 @@
     "@types/react": "16.8.23",
     "@types/react-dom": "16.8.5",
     "@types/react-router-dom": "^4.3.5",
-    "antd": "^3.22.0",
+    "antd": "^3.22.2",
     "classnames": "^2.2.6",
     "clone": "^2.1.2",
     "noam": "git+https://github.com/izuzak/noam.git",
