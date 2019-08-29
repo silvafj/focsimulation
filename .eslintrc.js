@@ -1,23 +1,32 @@
 module.exports = {
-    parser: '@typescript-eslint/parser',
-    extends: [
-        'plugin:react/recommended',
-        'plugin:@typescript-eslint/recommended',
-    ],
-    parserOptions: {
-        ecmaVersion: 2018,
-        sourceType: 'module',
-        ecmaFeatures: {
-            jsx: true,
-        },
+  env: {
+    browser: true,
+    es6: true
+  },
+  extends: [
+    "airbnb",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking"
+  ],
+  globals: {
+    Atomics: "readonly",
+    SharedArrayBuffer: "readonly"
+  },
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true
     },
-    rules: {
-        // Place to specify ESLint rules. Can be used to overwrite rules specified from the extended configs
-        // e.g. "@typescript-eslint/explicit-function-return-type": "off",
-    },
-    settings: {
-        react: {
-            version: 'detect',
-        },
-    },
+    ecmaVersion: 2018,
+    project: "./tsconfig.json"
+  },
+  parser: "@typescript-eslint/parser",
+  plugins: ["@typescript-eslint", "react"],
+  rules: {},
+  settings: {
+    react: {
+      version: "detect"
+    }
+  }
 };
