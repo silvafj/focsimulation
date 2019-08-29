@@ -36,6 +36,12 @@ export function getTransitionFromElement(element: Element): { from: string, to: 
     }
 }
 
+/**
+ * Return the coordinates relative to the center Point that represents the state. 
+ * 
+ * @param automaton 
+ * @param state 
+ */
 export function getStatePosition(automaton: any, state: string): Point {
     const position = automaton.statePositions.get(state);
     return {
@@ -50,6 +56,13 @@ export function getNextState(automaton: any): string {
     return 's' + (nextState + 1);
 }
 
+/**
+ * Set the automaton state as accepting or not accepting.
+ * 
+ * @param automaton 
+ * @param state 
+ * @param accepting 
+ */
 export function setAcceptingState(automaton: any, state: string, accepting: boolean): void {
     if (accepting) {
         if (!noam.fsm.isAcceptingState(automaton, state)) {
@@ -60,6 +73,13 @@ export function setAcceptingState(automaton: any, state: string, accepting: bool
     }
 }
 
+/**
+ * Add a state to the automaton.
+ * 
+ * @param automaton 
+ * @param state 
+ * @param position 
+ */
 export function addState(automaton: any, state: string, position: Point): void {
     noam.fsm.addState(automaton, state);
     if (!automaton.statePositions) {
@@ -73,6 +93,12 @@ export function addState(automaton: any, state: string, position: Point): void {
     }
 }
 
+/**
+ * Remove a state from the automaton and respective transitions.
+ * 
+ * @param automaton 
+ * @param state 
+ */
 export function removeState(automaton: any, state: string): void {
     if (automaton.initialState === state) {
         automaton.initialState = '';
@@ -87,6 +113,12 @@ export function removeState(automaton: any, state: string): void {
             !(t.toStates.length === 1 && t.toStates.includes(state)));
 }
 
+/**
+ * Remove a transition from the automaton.
+ * 
+ * @param automaton 
+ * @param key 
+ */
 export function removeTransition(automaton: any, key: string): void {
     automaton.transitionAngles.delete(key);
 
@@ -96,6 +128,14 @@ export function removeTransition(automaton: any, key: string): void {
 
 }
 
+/**
+ * Add and remove transitions based on the current transition and new symbols.
+ * 
+ * @param automaton 
+ * @param transition 
+ * @param newSymbol 
+ * @param transitionAngle 
+ */
 export function updateTransitions(
     automaton: any,
     transition: { from: string, to: string, symbol: string },

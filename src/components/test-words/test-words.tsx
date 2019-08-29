@@ -36,7 +36,7 @@ export const TestWords: React.FC<{
     automaton: any,
     words: Array<string>,
     testAccept: boolean,
-    onChange: (words: Array<string>) => void,
+    onChange?: (words: Array<string>) => void,
 }> = ({ automaton, words, testAccept, onChange }) => {
     const testType: string = (testAccept ? 'Accept' : 'Reject');
 
@@ -55,7 +55,11 @@ export const TestWords: React.FC<{
                 <Input.TextArea
                     rows={8}
                     value={words.join('\n')}
-                    onChange={e => onChange(e.target.value.split('\n'))}
+                    onChange={e => {
+                        if (onChange) {
+                            onChange(e.target.value.split('\n'))
+                        }
+                    }}
                 />
             </div>
         </div>

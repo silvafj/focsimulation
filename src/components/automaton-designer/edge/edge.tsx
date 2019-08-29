@@ -84,16 +84,12 @@ function getEndPointsAndCircle(circle: Point, radius: number, anchorAngle: numbe
     const circleRadius = 0.75 * radius;
     const startAngle = anchorAngle - Math.PI * 0.8;
     const endAngle = anchorAngle + Math.PI * 0.8;
-    const startX = circleX + circleRadius * Math.cos(startAngle);
-    const startY = circleY + circleRadius * Math.sin(startAngle);
-    const endX = circleX + circleRadius * Math.cos(endAngle);
-    const endY = circleY + circleRadius * Math.sin(endAngle);
 
     return {
-        startX: startX,
-        startY: startY,
-        endX: endX,
-        endY: endY,
+        startX: circleX + circleRadius * Math.cos(startAngle),
+        startY: circleY + circleRadius * Math.sin(startAngle),
+        endX: circleX + circleRadius * Math.cos(endAngle),
+        endY: circleY + circleRadius * Math.sin(endAngle),
         startAngle: startAngle,
         endAngle: endAngle,
         circleX: circleX,
@@ -129,8 +125,8 @@ export const Edge: React.FC<{
 
         // const anchorAngle: number = toState && automaton.transitionAngles ? automaton.transitionAngles.get(`${fromState}-${toState}`) : 0;
         // if (anchorAngle) {
-        //     const stuff = getEndPointsAndCircle(from, fromRadius, anchorAngle);
-        //     pathD = arc(stuff.circleX, stuff.circleY, stuff.circleRadius, stuff.startAngle, stuff.endAngle);
+        //     const epac = getEndPointsAndCircle(from, fromRadius, anchorAngle);
+        //     pathD = arc(epac.circleX, epac.circleY, epac.circleRadius, epac.startAngle, epac.endAngle);
         // } else {
         pathD = lineto(from, to);
         // }
@@ -141,15 +137,15 @@ export const Edge: React.FC<{
         label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
     } else {
         const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : automaton.transitionAngles.get(`${fromState}-${toState}`);
-        const stuff = getEndPointsAndCircle(from, fromRadius, anchorAngle);
+        const epac = getEndPointsAndCircle(from, fromRadius, anchorAngle);
 
-        pathD = arc(stuff.circleX, stuff.circleY, stuff.circleRadius, stuff.startAngle, stuff.endAngle, false);
+        pathD = arc(epac.circleX, epac.circleY, epac.circleRadius, epac.startAngle, epac.endAngle, false);
 
-        arrow = <EdgeArrow point={{ x: stuff.endX, y: stuff.endY }} angle={stuff.endAngle + Math.PI * 0.4} />;
+        arrow = <EdgeArrow point={{ x: epac.endX, y: epac.endY }} angle={epac.endAngle + Math.PI * 0.4} />;
 
         label = <EdgeLabel point={{
-            x: stuff.circleX + stuff.circleRadius * Math.cos(anchorAngle),
-            y: stuff.circleY + stuff.circleRadius * Math.sin(anchorAngle),
+            x: epac.circleX + epac.circleRadius * Math.cos(anchorAngle),
+            y: epac.circleY + epac.circleRadius * Math.sin(anchorAngle),
         }} text={symbol || ''} angle={anchorAngle} />;
     }
 

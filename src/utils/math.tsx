@@ -32,14 +32,14 @@ export function midpoint(start: Point, end: Point): Point {
 }
 
 /**
- * Return the angle of the line defined by two points and the horizontal axis.
+ * Return the angle (in radians) of the line defined by two points and the horizontal axis.
  * 
- * @param center 
- * @param point 
+ * @param start 
+ * @param end 
  * @param offsetAngle 
  */
-export function angleOfLine(center: Point, point: Point, offsetAngle: number = 0): number {
-    var anchorAngle = Math.atan2(point.y - center.y, point.x - center.x) + offsetAngle;
+export function angleOfLine(start: Point, end: Point, offsetAngle: number = 0): number {
+    var anchorAngle = Math.atan2(end.y - start.y, end.x - start.x) + offsetAngle;
     if (anchorAngle < -Math.PI) {
         anchorAngle += 2 * Math.PI;
     }

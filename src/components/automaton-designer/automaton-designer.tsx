@@ -86,7 +86,10 @@ function isWordInLanguage(automaton: any, word: string): Boolean {
     }
 }
 
-export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton: any) => void }> = ({ automaton, onUpdate }) => {
+export const AutomatonDesigner: React.FC<{
+    automaton: any,
+    onUpdate?: (automaton: any) => void
+}> = ({ automaton, onUpdate }) => {
 
     const [selectedObject, setSelectedObject] = useState<{ type: ObjectType, key: string } | null>();
     const [draggingMode, setDraggingMode] = useState<DraggingMode | null>();
@@ -118,7 +121,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
             }
         }
 
-        onUpdate(automaton);
+        if (onUpdate) {
+            onUpdate(automaton);
+        }
     }
 
     const mouseDownHandler = (e: React.MouseEvent) => {
@@ -163,7 +168,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                 if (selectedObject && selectedObject.type === ObjectType.NODE) {
                     automaton.statePositions.set(selectedObject.key, getMousePosition(e, draggingOffset));
                 }
-                onUpdate(automaton);
+                if (onUpdate) {
+                    onUpdate(automaton);
+                }
                 break;
 
             case DraggingMode.LINKING:
@@ -197,7 +204,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                         : 0
                 );
 
-                onUpdate(automaton);
+                if (onUpdate) {
+                    onUpdate(automaton);
+                }
             }
         }
 
@@ -251,7 +260,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
                 }
         }
 
-        onUpdate(automaton);
+        if (onUpdate) {
+            onUpdate(automaton);
+        }
     }
 
     const startDebuggingHandler = (e: React.MouseEvent) => {
@@ -299,7 +310,9 @@ export const AutomatonDesigner: React.FC<{ automaton: any, onUpdate: (automaton:
         if (click.key.startsWith('example')) {
             const index = Number(click.key.split('-')[1]);
             setTestWord(Examples[index].testWord);
-            onUpdate(clone(Examples[index].automaton, false));
+            if (onUpdate) {
+                onUpdate(clone(Examples[index].automaton, false));
+            }
         }
     }
 
