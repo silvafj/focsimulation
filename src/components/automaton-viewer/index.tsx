@@ -1,3 +1,3 @@
-import {AutomatonViewer} from './automaton-viewer';
+import { AutomatonViewer } from './automaton-viewer';
 
 export default AutomatonViewer;

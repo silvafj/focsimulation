@@ -6,42 +6,42 @@ import { Module, render } from 'viz.js/full.render.js';
 import './automaton-viewer.css';
 
 function isValidAutomaton(automaton: any): boolean {
-    return automaton && automaton.transitions.length > 0;
+  return automaton && automaton.transitions.length > 0;
 }
 
 function renderAutomaton(automaton: any, automatonParent: React.RefObject<HTMLDivElement>): void {
-    if (!isValidAutomaton(automaton)) {
+  if (!isValidAutomaton(automaton)) {
+    return;
+  }
+
+  (new Viz({ Module, render }))
+    .renderSVGElement(noam.fsm.printDotFormat(automaton))
+    .then((svgElement) => {
+      if (!automatonParent.current) {
         return;
-    }
+      }
 
-    (new Viz({ Module, render }))
-        .renderSVGElement(noam.fsm.printDotFormat(automaton))
-        .then((svgElement) => {
-            if (!automatonParent.current) {
-                return;
-            }
+      while (automatonParent.current.firstChild) {
+        automatonParent.current.removeChild(automatonParent.current.firstChild);
+      }
 
-            while (automatonParent.current.firstChild) {
-                automatonParent.current.removeChild(automatonParent.current.firstChild);
-            }
-
-            if (isValidAutomaton(automaton)) {
-                automatonParent.current.appendChild(svgElement);
-            }
-        })
-        .catch(error => {
-            console.error(error);
-        });
+      if (isValidAutomaton(automaton)) {
+        automatonParent.current.appendChild(svgElement);
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 }
 
 export const AutomatonViewer: React.FC<{ automaton: any }> = ({ automaton }) => {
-    const automatonParent = useRef<HTMLDivElement>(null);
+  const automatonParent = useRef<HTMLDivElement>(null);
 
-    // Rendering the automaton is done directly and bypass React reconciliation
-    // Avoid rendering if the automaton has not changed
-    useMemo(() => renderAutomaton(automaton, automatonParent), [automaton]);
+  // Rendering the automaton is done directly and bypass React reconciliation
+  // Avoid rendering if the automaton has not changed
+  useMemo(() => renderAutomaton(automaton, automatonParent), [automaton]);
 
-    return (
-        <div className="automaton-viewer-container" ref={automatonParent} />
-    );
-}
+  return (
+    <div className="automaton-viewer-container" ref={automatonParent} />
+  );
+};

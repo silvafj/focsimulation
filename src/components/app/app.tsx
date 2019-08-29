@@ -37,7 +37,7 @@ const withTracker = <P extends RouteComponentProps>(
 
     return <WrappedComponent {...props} />;
   };
-}
+};
 
 function getKeyFromLocation(pathname: string, location: any): string {
   if (pathname === '/') {
@@ -63,27 +63,25 @@ const SiderWithRouter = withRouter(({ location, ...props }) => (
   </Sider>
 ));
 
-export const App: React.FC = () => {
-  return (
-    <HashRouter>
-      <Layout>
-        <Header>
-          <div className="logo">
-            <img src={logo} className="icon" alt="logo" />
-            <a href=".">Fundamentals of Computing</a>
-          </div>
-          <div className="links">
-            <a href="https://github.com/silvafj/focsimulation">GitHub</a>
-            <a href="http://www.dcs.bbk.ac.uk/~michael/foc/foc.html">Course</a>
-          </div>
-        </Header>
-        <SiderWithRouter />
-        <Content>
-          <Route exact path={["/", "/automaton"]} component={withTracker(Automaton)} />
-          <Route exact path={["/regular-language"]} component={withTracker(RegularLanguage)} />
-          <Route exact path={["/practice"]} component={withTracker(Practice)} />
-        </Content>
-      </Layout>
-    </HashRouter>
-  );
-}
+export const App: React.FC = () => (
+  <HashRouter>
+    <Layout>
+      <Header>
+        <div className="logo">
+          <img src={logo} className="icon" alt="logo" />
+          <a href=".">Fundamentals of Computing</a>
+        </div>
+        <div className="links">
+          <a href="https://github.com/silvafj/focsimulation">GitHub</a>
+          <a href="http://www.dcs.bbk.ac.uk/~michael/foc/foc.html">Course</a>
+        </div>
+      </Header>
+      <SiderWithRouter />
+      <Content>
+        <Route exact path={['/', '/automaton']} component={withTracker(Automaton)} />
+        <Route exact path={['/regular-language']} component={withTracker(RegularLanguage)} />
+        <Route exact path={['/practice']} component={withTracker(Practice)} />
+      </Content>
+    </Layout>
+  </HashRouter>
+);
