@@ -25,7 +25,9 @@ module.exports = {
   plugins: ["@typescript-eslint", "react"],
   rules: {
     "import/no-unresolved": 0,
-    "import/extensions": 0
+    "import/extensions": 0,
+    "import/prefer-default-export": 0,
+    "react/jsx-filename-extension": [1, { extensions: [".jsx", ".tsx"] }]
   },
   settings: {
     react: {

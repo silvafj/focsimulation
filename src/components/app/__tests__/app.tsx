@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { MemoryRouter } from 'react-router';
-import App from '../';
+import App from '..';
 
 it('renders without crashing', () => {
   const div = document.createElement('div');

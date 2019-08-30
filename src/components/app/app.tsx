@@ -47,7 +47,7 @@ function getKeyFromLocation(pathname: string): string {
   return pathname.substr(1);
 }
 
-const SiderWithRouter = withRouter(({ location, ...props }) => (
+const SiderWithRouter = withRouter(({ location }) => (
   <Sider width="300px">
     <Menu theme="dark" selectedKeys={[getKeyFromLocation(location.pathname)]}>
       <Menu.Item key="automaton">

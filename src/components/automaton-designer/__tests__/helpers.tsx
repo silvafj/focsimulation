@@ -60,7 +60,6 @@ it('automaton manage transitions', () => {
 });
 
 it('get state from element', () => {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
@@ -75,7 +74,6 @@ it('get state from element', () => {
 });
 
 it('get transition from element', () => {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
