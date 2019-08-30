@@ -39,7 +39,7 @@ const withTracker = <P extends RouteComponentProps>(
   };
 };
 
-function getKeyFromLocation(pathname: string, location: any): string {
+function getKeyFromLocation(pathname: string): string {
   if (pathname === '/') {
     return 'automaton';
   }
@@ -49,7 +49,7 @@ function getKeyFromLocation(pathname: string, location: any): string {
 
 const SiderWithRouter = withRouter(({ location, ...props }) => (
   <Sider width="300px">
-    <Menu theme="dark" selectedKeys={[getKeyFromLocation(location.pathname, location)]}>
+    <Menu theme="dark" selectedKeys={[getKeyFromLocation(location.pathname)]}>
       <Menu.Item key="automaton">
         <Link to="/automaton">Automaton</Link>
       </Menu.Item>

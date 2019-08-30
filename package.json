@@ -10,7 +10,6 @@
   "dependencies": {
     "@types/classnames": "^2.2.9",
     "@types/clone": "^0.1.30",
-    "@types/jest": "24.0.15",
     "@types/node": "12.6.8",
     "@types/react": "16.8.23",
     "@types/react-dom": "16.8.5",
@@ -54,6 +53,7 @@
     ]
   },
   "devDependencies": {
+    "@types/jest": "^24.0.18",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
     "eslint-config-airbnb": "^18.0.1",

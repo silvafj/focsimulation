@@ -23,7 +23,10 @@ module.exports = {
   },
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint", "react"],
-  rules: {},
+  rules: {
+    "import/no-unresolved": 0,
+    "import/extensions": 0
+  },
   settings: {
     react: {
       version: "detect"

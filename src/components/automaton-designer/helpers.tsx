@@ -2,6 +2,18 @@ import noam from 'noam';
 
 import { Point } from '../../utils/math';
 
+function isSVGGElement(element: Element): boolean {
+  // Can't use "element instanceof SVGGElement" because SVGGElement is not defined
+  // in JSDOM and Jest test fail.
+  return element instanceof SVGElement && element.tagName === 'g';
+}
+
+/**
+ * Returns the point within the SVG that corresponds to the mouse event.
+ * 
+ * @param e 
+ * @param offset 
+ */
 export function getMousePosition(e: React.MouseEvent, offset: Point = { x: 0, y: 0 }): Point {
   const svg = e.currentTarget as SVGSVGElement;
   const CTM = svg.getScreenCTM() as DOMMatrix;
@@ -12,23 +24,28 @@ export function getMousePosition(e: React.MouseEvent, offset: Point = { x: 0, y:
   };
 }
 
+/**
+ * Return the state corresponding to the specified element.
+ * @param element 
+ */
 export function getStateFromElement(element: Element): string | null {
-  if (element instanceof SVGGElement && element.classList.contains('node')) {
-    return element.dataset.state || null;
-  } if (element.parentElement instanceof SVGGElement) {
+  if (element instanceof SVGElement && isSVGGElement(element) && element.classList.contains('node')) {
+    return (element as SVGElement).dataset.state || null;
+  } if (element.parentElement instanceof SVGElement && isSVGGElement(element.parentElement)) {
     return getStateFromElement(element.parentElement);
   }
+
   return null;
 }
 
 export function getTransitionFromElement(element: Element): { from: string; to: string; symbol: string } | null {
-  if (element instanceof SVGGElement && element.classList.contains('edge')) {
+  if (element instanceof SVGElement && isSVGGElement(element) && element.classList.contains('edge')) {
     return {
       from: element.dataset.from || '',
       to: element.dataset.to || '',
       symbol: element.dataset.symbol || '',
     };
-  } if (element.parentElement instanceof SVGGElement) {
+  } if (element.parentElement instanceof SVGElement && isSVGGElement(element.parentElement)) {
     return getTransitionFromElement(element.parentElement);
   }
   return null;
@@ -48,6 +65,11 @@ export function getStatePosition(automaton: any, state: string): Point {
   };
 }
 
+/**
+ * Return the next available state.
+ * 
+ * @param automaton 
+ */
 export function getNextState(automaton: any): string {
   const nextState: number = automaton.states.reduce(
     (acc: number, state: string) => Math.max(acc, parseInt(state.substr(1))), -1,
@@ -108,8 +130,8 @@ export function removeState(automaton: any, state: string): void {
   automaton.transitions.map((t: NoamAutomatonTransition) => t.toStates.filter((s: string) => s !== state));
   automaton.transitions = automaton.transitions.filter(
     (t: NoamAutomatonTransition) => (t.fromState !== state)
-            && t.toStates.length > 0
-            && !(t.toStates.length === 1 && t.toStates.includes(state)),
+      && t.toStates.length > 0
+      && !(t.toStates.length === 1 && t.toStates.includes(state)),
   );
 }
 
@@ -188,7 +210,7 @@ type NoamAutomatonTransition = { fromState: string; toStates: Array<string>; sym
 type NoamAutomatonTransitions = Array<NoamAutomatonTransition>;
 
 export function groupByTransitions(transitions: NoamAutomatonTransitions):
-    Array<{ fromState: string; toState: string; symbols: Array<string> }> {
+  Array<{ fromState: string; toState: string; symbols: Array<string> }> {
   const unpacked = [];
   for (const transition of transitions) {
     for (const toState of transition.toStates) {
