@@ -11,7 +11,7 @@ import noam from 'noam';
 import clone from 'clone';
 
 import { Edge } from './edge/edge';
-import { Node } from './node/node';
+import { Node, Attributes as NodeAttrs } from './node/node';
 import { Help } from './help/help';
 import {
   addState,
@@ -147,7 +147,7 @@ export const AutomatonDesigner: React.FC<{
         setSelectedObject({ type: ObjectType.EDGE, key: `${transition.from}-${transition.to}` });
       } else {
         const nextState = getNextState(automaton);
-        addState(automaton, nextState, getMousePosition(e, { x: -22, y: -22 }));
+        addState(automaton, nextState, getMousePosition(e, { x: -NodeAttrs.ACCEPTED_RADIUS, y: -NodeAttrs.ACCEPTED_RADIUS }));
         setSelectedObject({ type: ObjectType.NODE, key: nextState });
       }
     }

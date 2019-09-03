@@ -12,11 +12,12 @@ import {
   closestPointOnCircle,
   angleOfLine,
 } from '../../../utils/math';
+import { Attributes as NodeAttrs } from '../node/node';
 
 import './edge.css';
 
 function getStateRadius(automaton: any, state: string): number {
-  return noam.fsm.isAcceptingState(automaton, state) ? 22 : 18;
+  return noam.fsm.isAcceptingState(automaton, state) ? NodeAttrs.ACCEPTED_RADIUS : NodeAttrs.NODE_RADIUS;
 }
 
 /**
@@ -81,7 +82,7 @@ function arc(
 function getEndPointsAndCircle(circle: Point, radius: number, anchorAngle: number) {
   const circleX = circle.x + 1.5 * radius * Math.cos(anchorAngle);
   const circleY = circle.y + 1.5 * radius * Math.sin(anchorAngle);
-  const circleRadius = 0.75 * radius;
+  const circleRadius = 0.75 * NodeAttrs.NODE_RADIUS;
   const startAngle = anchorAngle - Math.PI * 0.8;
   const endAngle = anchorAngle + Math.PI * 0.8;
 
@@ -99,92 +100,92 @@ function getEndPointsAndCircle(circle: Point, radius: number, anchorAngle: numbe
 }
 
 export const Edge: React.FC<{
-    automaton: any;
-    fromState: string;
-    toState?: string | null;
-    symbol?: string;
-    mousePosition?: Point;
-    selected: boolean;
-    dragging: boolean;
+  automaton: any;
+  fromState: string;
+  toState?: string | null;
+  symbol?: string;
+  mousePosition?: Point;
+  selected: boolean;
+  dragging: boolean;
 }> = ({
   automaton, fromState, toState, symbol, mousePosition, selected, dragging,
 }) => {
-  let pathD: Array<string> = [];
+    let pathD: Array<string> = [];
 
-  let from = getStatePosition(automaton, fromState);
-  const fromRadius = getStateRadius(automaton, fromState);
-  let to = toState ? getStatePosition(automaton, toState) : mousePosition!;
-  const mpoint = mousePosition || midpoint(from, to);
+    let from = getStatePosition(automaton, fromState);
+    const fromRadius = getStateRadius(automaton, fromState);
+    let to = toState ? getStatePosition(automaton, toState) : mousePosition!;
+    const mpoint = mousePosition || midpoint(from, to);
 
-  let arrow = null;
-  let label = null;
+    let arrow = null;
+    let label = null;
 
-  if (fromState !== toState) {
-    from = closestPointOnCircle({ cx: from.x, cy: from.y, r: fromRadius }, mpoint);
-    to = toState ? closestPointOnCircle({ cx: to.x, cy: to.y, r: getStateRadius(automaton, toState) }, from) : mpoint;
+    if (fromState !== toState) {
+      from = closestPointOnCircle({ cx: from.x, cy: from.y, r: fromRadius }, mpoint);
+      to = toState ? closestPointOnCircle({ cx: to.x, cy: to.y, r: getStateRadius(automaton, toState) }, from) : mpoint;
 
-    // TODO: arc edges between two nodes
+      // TODO: arc edges between two nodes
 
-    // const anchorAngle: number = toState && automaton.transitionAngles ? automaton.transitionAngles.get(`${fromState}-${toState}`) : 0;
-    // if (anchorAngle) {
-    //     const epac = getEndPointsAndCircle(from, fromRadius, anchorAngle);
-    //     pathD = arc(epac.circleX, epac.circleY, epac.circleRadius, epac.startAngle, epac.endAngle);
-    // } else {
-    pathD = lineto(from, to);
-    // }
+      // const anchorAngle: number = toState && automaton.transitionAngles ? automaton.transitionAngles.get(`${fromState}-${toState}`) : 0;
+      // if (anchorAngle) {
+      //     const epac = getEndPointsAndCircle(from, fromRadius, anchorAngle);
+      //     pathD = arc(epac.circleX, epac.circleY, epac.circleRadius, epac.startAngle, epac.endAngle);
+      // } else {
+      pathD = lineto(from, to);
+      // }
 
-    arrow = <EdgeArrow point={to} angle={Math.atan2(to.y - from.y, to.x - from.x)} />;
+      arrow = <EdgeArrow point={to} angle={Math.atan2(to.y - from.y, to.x - from.x)} />;
 
-    const textAngle = Math.atan2(to.x - from.x, from.y - to.y);
-    label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
-  } else {
-    const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : automaton.transitionAngles.get(`${fromState}-${toState}`);
-    const epac = getEndPointsAndCircle(from, fromRadius, anchorAngle);
+      const textAngle = Math.atan2(to.x - from.x, from.y - to.y);
+      label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
+    } else {
+      const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : automaton.transitionAngles.get(`${fromState}-${toState}`);
+      const epac = getEndPointsAndCircle(from, fromRadius, anchorAngle);
 
-    pathD = arc(epac.circleX, epac.circleY, epac.circleRadius, epac.startAngle, epac.endAngle, false);
+      pathD = arc(epac.circleX, epac.circleY, epac.circleRadius, epac.startAngle, epac.endAngle, false);
 
-    arrow = <EdgeArrow point={{ x: epac.endX, y: epac.endY }} angle={epac.endAngle + Math.PI * 0.4} />;
+      arrow = <EdgeArrow point={{ x: epac.endX, y: epac.endY }} angle={epac.endAngle + Math.PI * 0.4} />;
 
-    label = (
-      <EdgeLabel
-        point={{
-          x: epac.circleX + epac.circleRadius * Math.cos(anchorAngle),
-          y: epac.circleY + epac.circleRadius * Math.sin(anchorAngle),
-        }}
-        text={symbol || ''}
-        angle={anchorAngle}
-      />
+      label = (
+        <EdgeLabel
+          point={{
+            x: epac.circleX + epac.circleRadius * Math.cos(anchorAngle),
+            y: epac.circleY + epac.circleRadius * Math.sin(anchorAngle),
+          }}
+          text={symbol || ''}
+          angle={anchorAngle}
+        />
+      );
+    }
+
+    const edgeClass = classNames({
+      edge: true,
+      dragging,
+      selected,
+      linking: mousePosition,
+    });
+
+    let dataProps = {};
+    if (!mousePosition) {
+      dataProps = {
+        'data-from': fromState,
+        'data-to': toState,
+        'data-symbol': symbol,
+      };
+    }
+
+    return (
+      <g className={edgeClass} {...dataProps}>
+        <path className="line" d={pathD.join(' ')} />
+        {arrow}
+        {label}
+      </g>
     );
-  }
-
-  const edgeClass = classNames({
-    edge: true,
-    dragging,
-    selected,
-    linking: mousePosition,
-  });
-
-  let dataProps = {};
-  if (!mousePosition) {
-    dataProps = {
-      'data-from': fromState,
-      'data-to': toState,
-      'data-symbol': symbol,
-    };
-  }
-
-  return (
-    <g className={edgeClass} {...dataProps}>
-      <path className="line" d={pathD.join(' ')} />
-      {arrow}
-      {label}
-    </g>
-  );
-};
+  };
 
 const EdgeArrow: React.FC<{
-    point: Point;
-    angle: number;
+  point: Point;
+  angle: number;
 }> = ({ point, angle }) => {
   const dx = Math.cos(angle);
   const dy = Math.sin(angle);
@@ -200,9 +201,9 @@ const EdgeArrow: React.FC<{
 };
 
 const EdgeLabel: React.FC<{
-    point: Point;
-    text: string;
-    angle?: number;
+  point: Point;
+  text: string;
+  angle?: number;
 }> = ({ point, text, angle }) => {
   let { x } = point;
   let { y } = point;

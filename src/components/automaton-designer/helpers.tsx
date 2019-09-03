@@ -1,5 +1,6 @@
 import noam from 'noam';
 
+import { Attributes as NodeAttrs } from '../automaton-designer/node/node';
 import { Point } from '../../utils/math';
 
 function isSVGGElement(element: Element): boolean {
@@ -65,8 +66,8 @@ export function getTransitionFromElement(element: Element): { from: string; to: 
 export function getStatePosition(automaton: any, state: string): Point {
   const position = automaton.statePositions.get(state);
   return {
-    x: position.x + 22,
-    y: position.y + 22,
+    x: position.x + NodeAttrs.ACCEPTED_RADIUS,
+    y: position.y + NodeAttrs.ACCEPTED_RADIUS,
   };
 }
 
