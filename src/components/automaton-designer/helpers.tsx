@@ -4,7 +4,7 @@ import { Point } from '../../utils/math';
 
 function isSVGGElement(element: Element): boolean {
   // Can't use "element instanceof SVGGElement" because SVGGElement is not defined
-  // in JSDOM and Jest test fail.
+  // in JSDOM leading to Jest test to fail.
   return element instanceof SVGElement && element.tagName === 'g';
 }
 
@@ -38,6 +38,11 @@ export function getStateFromElement(element: Element): string | null {
   return null;
 }
 
+/**
+ * Return the transition corresponding to the specified element.
+ * 
+ * @param element 
+ */
 export function getTransitionFromElement(element: Element): { from: string; to: string; symbol: string } | null {
   if (element instanceof SVGElement && isSVGGElement(element) && element.classList.contains('edge')) {
     return {
@@ -156,13 +161,11 @@ export function removeTransition(automaton: any, key: string): void {
  * @param automaton
  * @param transition
  * @param newSymbol
- * @param transitionAngle
  */
 export function updateTransitions(
   automaton: any,
   transition: { from: string; to: string; symbol: string },
   newSymbol: string,
-  transitionAngle?: number,
 ): any {
   const newArr = newSymbol.split(',').filter(Boolean);
   const oldArr = transition.symbol.split(',').filter(Boolean);
@@ -175,11 +178,8 @@ export function updateTransitions(
 
     noam.fsm.addTransition(automaton, transition.from, [transition.to], symbol);
 
-    if (transitionAngle) {
-      if (!automaton.transitionAngles) {
-        automaton.transitionAngles = new Map<string, number>();
-      }
-      automaton.transitionAngles.set(`${transition.from}-${transition.to}`, transitionAngle);
+    if (!automaton.transitionAngles) {
+      automaton.transitionAngles = new Map<string, number>();
     }
   }
 
@@ -206,9 +206,32 @@ export function updateTransitions(
   return automaton;
 }
 
+/**
+ * Update the transition angle.
+ * 
+ * @param automaton 
+ * @param from 
+ * @param to 
+ * @param transitionAngle 
+ */
+export function updateTransitionAngle(
+  automaton: any,
+  from: string,
+  to: string,
+  transitionAngle: number,
+): any {
+  automaton.transitionAngles.set(`${from}-${to}`, transitionAngle);
+  return automaton;
+}
+
 type NoamAutomatonTransition = { fromState: string; toStates: Array<string>; symbol: string };
 type NoamAutomatonTransitions = Array<NoamAutomatonTransition>;
 
+/**
+ * Return the transitions with a different structure suitable to dynamically generate edges.
+ * 
+ * @param transitions 
+ */
 export function groupByTransitions(transitions: NoamAutomatonTransitions):
   Array<{ fromState: string; toState: string; symbols: Array<string> }> {
   const unpacked = [];

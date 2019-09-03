@@ -10,7 +10,7 @@ it('renders without crashing', () => {
   addState(automaton, 's2', { x: 100, y: 100 });
   automaton.initialState = 's1';
   setAcceptingState(automaton, 's1', true);
-  updateTransitions(automaton, { from: 's1', to: 's1', symbol: 'a,c,d,e' }, 'a,b', 1);
+  updateTransitions(automaton, { from: 's1', to: 's1', symbol: 'a,c,d,e' }, 'a,b');
   updateTransitions(automaton, { from: 's1', to: 's2', symbol: '' }, 'c');
 
   const div = document.createElement('div');

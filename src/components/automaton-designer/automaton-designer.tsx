@@ -14,17 +14,18 @@ import { Edge } from './edge/edge';
 import { Node } from './node/node';
 import { Help } from './help/help';
 import {
-  getStateFromElement,
+  addState,
   getMousePosition,
+  getNextState,
+  getStateFromElement,
   getStatePosition,
   getTransitionFromElement,
   groupByTransitions,
-  updateTransitions,
-  addState,
   removeState,
-  setAcceptingState,
-  getNextState,
   removeTransition,
+  setAcceptingState,
+  updateTransitions,
+  updateTransitionAngle,
 } from './helpers';
 import { Examples } from './examples';
 import { Point, angleOfLine } from '../../utils/math';
@@ -32,19 +33,30 @@ import { Point, angleOfLine } from '../../utils/math';
 import './automaton-designer.css';
 
 type DebuggingMode = {
-    currentStates: Array<string>;
-    testWord: string;
-    nextSymbolIndex: number;
-    iteratingUntilEnd: boolean;
+  currentStates: Array<string>;
+  testWord: string;
+  nextSymbolIndex: number;
+  iteratingUntilEnd: boolean;
 };
 
 enum ObjectType { NODE, EDGE }
 enum DraggingMode { DRAGGING, LINKING }
 
+/**
+ * Returns true if the automaton can be used to test inputs.
+ * 
+ * @param automaton 
+ */
 function canRunAutomaton(automaton: any): boolean {
   return automaton.states.length > 0 && automaton.initialState;
 }
 
+/**
+ * Reset the automaton state to the initial state.
+ * 
+ * @param automaton 
+ * @param word 
+ */
 function resetAutomaton(automaton: any, word: string): DebuggingMode {
   return {
     currentStates: noam.fsm.computeEpsilonClosure(automaton, [automaton.initialState]),
@@ -54,6 +66,12 @@ function resetAutomaton(automaton: any, word: string): DebuggingMode {
   };
 }
 
+/**
+ * Applies a transition to the automaton with the previous read symbol.
+ * 
+ * @param automaton 
+ * @param db 
+ */
 function previousSymbol(automaton: any, db: DebuggingMode): DebuggingMode {
   if (db.nextSymbolIndex <= 0) {
     return db;
@@ -67,6 +85,12 @@ function previousSymbol(automaton: any, db: DebuggingMode): DebuggingMode {
   };
 }
 
+/**
+ * Applies a transition to the automaton reading the next symbol.
+ * 
+ * @param automaton 
+ * @param db 
+ */
 function nextSymbol(automaton: any, db: DebuggingMode): DebuggingMode {
   if (db.nextSymbolIndex >= db.testWord.length) {
     return db;
@@ -80,6 +104,12 @@ function nextSymbol(automaton: any, db: DebuggingMode): DebuggingMode {
   };
 }
 
+/**
+ * Returns true if the input word is accepted by the automaton.
+ * 
+ * @param automaton 
+ * @param word 
+ */
 function isWordInLanguage(automaton: any, word: string): boolean {
   try {
     return noam.fsm.isStringInLanguage(automaton, word);
@@ -89,8 +119,8 @@ function isWordInLanguage(automaton: any, word: string): boolean {
 }
 
 export const AutomatonDesigner: React.FC<{
-    automaton: any;
-    onUpdate?: (automaton: any) => void;
+  automaton: any;
+  onUpdate?: (automaton: any) => void;
 }> = ({ automaton, onUpdate }) => {
   const [selectedObject, setSelectedObject] = useState<{ type: ObjectType; key: string } | null>();
   const [draggingMode, setDraggingMode] = useState<DraggingMode | null>();
@@ -157,6 +187,7 @@ export const AutomatonDesigner: React.FC<{
       } else {
         setSelectedObject(null);
       }
+      setDraggingMode(DraggingMode.DRAGGING);
     }
   };
 
@@ -166,9 +197,29 @@ export const AutomatonDesigner: React.FC<{
     switch (draggingMode) {
       case DraggingMode.DRAGGING:
         automaton = clone(automaton, false);
-        if (selectedObject && selectedObject.type === ObjectType.NODE) {
-          automaton.statePositions.set(selectedObject.key, getMousePosition(e, draggingOffset));
+        if (!selectedObject) {
+          return;
         }
+
+        switch (selectedObject.type) {
+          case ObjectType.NODE:
+            automaton.statePositions.set(selectedObject.key, getMousePosition(e, draggingOffset));
+            break;
+          case ObjectType.EDGE:
+            const [fromState, toState] = selectedObject.key.split('-');
+
+            automaton = updateTransitionAngle(
+              automaton,
+              fromState,
+              toState,
+              angleOfLine(
+                getStatePosition(automaton, fromState),
+                getMousePosition(e)
+              ),
+            );
+            break;
+        }
+
         if (onUpdate) {
           onUpdate(automaton);
         }
@@ -192,6 +243,7 @@ export const AutomatonDesigner: React.FC<{
       if (toState && selectedObject && selectedObject.type === ObjectType.NODE) {
         const symbol = prompt('What is the transition symbol?');
         automaton = clone(automaton, false);
+
         automaton = updateTransitions(
           automaton,
           {
@@ -200,9 +252,16 @@ export const AutomatonDesigner: React.FC<{
             symbol: '',
           },
           symbol || '',
-          selectedObject.key === toState
-            ? angleOfLine(getStatePosition(automaton, selectedObject.key), getMousePosition(e))
-            : 0,
+        );
+
+        automaton = updateTransitionAngle(
+          automaton,
+          selectedObject.key,
+          toState,
+          angleOfLine(
+            getStatePosition(automaton, selectedObject.key),
+            getMousePosition(e)
+          ),
         );
 
         if (onUpdate) {
@@ -319,9 +378,6 @@ export const AutomatonDesigner: React.FC<{
     }
   };
 
-  /** TODO:
-     * check if automaton is equivalent to regular expression
-     */
   return (
     <div className="automaton-designer">
       <div className="toolbar">
@@ -333,11 +389,11 @@ export const AutomatonDesigner: React.FC<{
             <Menu onClick={handleOptionsMenuClick}>
               <SubMenu title="Examples">
                 {
-                                    Examples.map((v, i) => <Menu.Item key={`example-${i}`}>{v.title}</Menu.Item>)
-                                }
+                  Examples.map((v, i) => <Menu.Item key={`example-${i}`}>{v.title}</Menu.Item>)
+                }
               </SubMenu>
             </Menu>
-)}
+          )}
         >
           <Button icon="menu" />
         </Dropdown>
@@ -346,15 +402,15 @@ export const AutomatonDesigner: React.FC<{
           ? (
             <span className="ant-input-affix-wrapper debugging-symbols">
               {
-                        debuggingMode.testWord.split('').map((symbol, index) => {
-                          const symbolClass = classNames({
-                            consumed: index < debuggingMode.nextSymbolIndex,
-                            current: index === debuggingMode.nextSymbolIndex,
-                          });
+                debuggingMode.testWord.split('').map((symbol, index) => {
+                  const symbolClass = classNames({
+                    consumed: index < debuggingMode.nextSymbolIndex,
+                    current: index === debuggingMode.nextSymbolIndex,
+                  });
 
-                          return <span key={index} className={symbolClass}>{symbol}</span>;
-                        })
-                    }
+                  return <span key={index} className={symbolClass}>{symbol}</span>;
+                })
+              }
             </span>
           )
           : (
@@ -367,7 +423,7 @@ export const AutomatonDesigner: React.FC<{
                   type={testWord && isWordInLanguage(automaton, testWord) ? 'check' : 'close'}
                   style={{ display: (!testWord ? 'none' : 'inherit') }}
                 />
-)}
+              )}
               onChange={(e) => setTestWord(e.target.value)}
             />
           )}
@@ -425,10 +481,10 @@ export const AutomatonDesigner: React.FC<{
                 return (
                   <Edge
                     key={edgeKey}
-automaton={automaton}
+                    automaton={automaton}
                     fromState={t.fromState}
-toState={t.toState}
-symbol={t.symbols.sort().join(',')}
+                    toState={t.toState}
+                    symbol={t.symbols.sort().join(',')}
                     dragging={Boolean(selectedObject && selectedObject.type === ObjectType.EDGE && selectedObject.key === edgeKey && draggingMode === DraggingMode.DRAGGING)}
                     selected={Boolean(selectedObject && selectedObject.type === ObjectType.EDGE && selectedObject.key === edgeKey)}
                   />
