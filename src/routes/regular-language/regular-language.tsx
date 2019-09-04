@@ -65,9 +65,9 @@ export const RegularLanguage: React.FC = () => {
       }
       case ExpressionMenuOp.SIMPLIFY: {
         /** TODO:
-                 * write the simplify steps to the log
-                 * allow debugging the simplification with step forward and explanation
-                 */
+         * write the simplify steps to the log
+         * allow debugging the simplification with step forward and explanation
+         */
         setExpression(noam.re.string.simplify(expression));
         break;
       }

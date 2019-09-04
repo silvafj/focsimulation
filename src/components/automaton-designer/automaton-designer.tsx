@@ -18,17 +18,16 @@ import {
   getMousePosition,
   getNextState,
   getStateFromElement,
-  getStatePosition,
   getTransitionFromElement,
   groupByTransitions,
   removeState,
   removeTransition,
   setAcceptingState,
   updateTransitions,
-  updateTransitionAngle,
+  updateTransitionPositions,
 } from './helpers';
 import { Examples } from './examples';
-import { Point, angleOfLine } from '../../utils/math';
+import { Point } from '../../utils/math';
 
 import './automaton-designer.css';
 
@@ -208,15 +207,13 @@ export const AutomatonDesigner: React.FC<{
           case ObjectType.EDGE:
             const [fromState, toState] = selectedObject.key.split('-');
 
-            automaton = updateTransitionAngle(
+            automaton = updateTransitionPositions(
               automaton,
               fromState,
               toState,
-              angleOfLine(
-                getStatePosition(automaton, fromState),
-                getMousePosition(e)
-              ),
+              getMousePosition(e),
             );
+
             break;
         }
 
@@ -254,14 +251,11 @@ export const AutomatonDesigner: React.FC<{
           symbol || '',
         );
 
-        automaton = updateTransitionAngle(
+        automaton = updateTransitionPositions(
           automaton,
           selectedObject.key,
           toState,
-          angleOfLine(
-            getStatePosition(automaton, selectedObject.key),
-            getMousePosition(e)
-          ),
+          getMousePosition(e),
         );
 
         if (onUpdate) {

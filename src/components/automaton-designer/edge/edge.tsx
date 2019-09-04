@@ -6,13 +6,14 @@ import {
   getStatePosition,
 } from '../helpers';
 import {
-  Point,
+  angleOfLine,
+  circleFromThreePoints,
+  closestPointOnCircle,
   fixed,
   midpoint,
-  closestPointOnCircle,
-  angleOfLine,
+  Point,
 } from '../../../utils/math';
-import { Attributes as NodeAttrs } from '../node/node';
+import { Attributes as NodeAttrs, Attributes } from '../node/node';
 
 import './edge.css';
 
@@ -57,6 +58,7 @@ function arc(
     [startAngle, endAngle] = [endAngle, startAngle];
   }
 
+
   if (endAngle < startAngle) {
     endAngle += Math.PI * 2;
   }
@@ -65,7 +67,7 @@ function arc(
   const startY = y + radius * Math.sin(startAngle);
   const endX = x + radius * Math.cos(endAngle);
   const endY = y + radius * Math.sin(endAngle);
-  const useGreaterThan180 = (Math.abs(endAngle - startAngle) > Math.PI) ? '1' : '0';
+  const useGreaterThan180 = (Math.abs(endAngle - startAngle) > Math.PI);
 
   // The elliptical arc curve commands
   // https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands
@@ -79,26 +81,6 @@ function arc(
   ];
 }
 
-function getEndPointsAndCircle(circle: Point, radius: number, anchorAngle: number) {
-  const circleX = circle.x + 1.5 * radius * Math.cos(anchorAngle);
-  const circleY = circle.y + 1.5 * radius * Math.sin(anchorAngle);
-  const circleRadius = 0.75 * NodeAttrs.NODE_RADIUS;
-  const startAngle = anchorAngle - Math.PI * 0.8;
-  const endAngle = anchorAngle + Math.PI * 0.8;
-
-  return {
-    startX: circleX + circleRadius * Math.cos(startAngle),
-    startY: circleY + circleRadius * Math.sin(startAngle),
-    endX: circleX + circleRadius * Math.cos(endAngle),
-    endY: circleY + circleRadius * Math.sin(endAngle),
-    startAngle,
-    endAngle,
-    circleX,
-    circleY,
-    circleRadius,
-  };
-}
-
 export const Edge: React.FC<{
   automaton: any;
   fromState: string;
@@ -108,54 +90,96 @@ export const Edge: React.FC<{
   selected: boolean;
   dragging: boolean;
 }> = ({
-  automaton, fromState, toState, symbol, mousePosition, selected, dragging,
+  automaton,
+  fromState, toState, symbol, mousePosition, selected, dragging,
 }) => {
-    let pathD: Array<string> = [];
+    function generateSelfEdge(): void {
+      const angle = mousePosition ? angleOfLine(from, mousePosition) : (tPositions ? tPositions.a : 0);
 
-    let from = getStatePosition(automaton, fromState);
-    const fromRadius = getStateRadius(automaton, fromState);
-    let to = toState ? getStatePosition(automaton, toState) : mousePosition!;
-    const mpoint = mousePosition || midpoint(from, to);
+      const circleX = from.x + 1.5 * fromRadius * Math.cos(angle);
+      const circleY = from.y + 1.5 * fromRadius * Math.sin(angle);
+      const circleRadius = 0.75 * NodeAttrs.NODE_RADIUS;
+      const startAngle = angle - Math.PI * 0.8;
+      const endAngle = angle + Math.PI * 0.8;
+      const endX = circleX + circleRadius * Math.cos(endAngle);
+      const endY = circleY + circleRadius * Math.sin(endAngle);
 
-    let arrow = null;
-    let label = null;
+      pathD = arc(circleX, circleY, circleRadius, startAngle, endAngle, false);
 
-    if (fromState !== toState) {
-      from = closestPointOnCircle({ cx: from.x, cy: from.y, r: fromRadius }, mpoint);
-      to = toState ? closestPointOnCircle({ cx: to.x, cy: to.y, r: getStateRadius(automaton, toState) }, from) : mpoint;
-
-      // TODO: arc edges between two nodes
-
-      // const anchorAngle: number = toState && automaton.transitionAngles ? automaton.transitionAngles.get(`${fromState}-${toState}`) : 0;
-      // if (anchorAngle) {
-      //     const epac = getEndPointsAndCircle(from, fromRadius, anchorAngle);
-      //     pathD = arc(epac.circleX, epac.circleY, epac.circleRadius, epac.startAngle, epac.endAngle);
-      // } else {
-      pathD = lineto(from, to);
-      // }
-
-      arrow = <EdgeArrow point={to} angle={Math.atan2(to.y - from.y, to.x - from.x)} />;
-
-      const textAngle = Math.atan2(to.x - from.x, from.y - to.y);
-      label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
-    } else {
-      const anchorAngle = mousePosition ? angleOfLine(from, mousePosition) : automaton.transitionAngles.get(`${fromState}-${toState}`);
-      const epac = getEndPointsAndCircle(from, fromRadius, anchorAngle);
-
-      pathD = arc(epac.circleX, epac.circleY, epac.circleRadius, epac.startAngle, epac.endAngle, false);
-
-      arrow = <EdgeArrow point={{ x: epac.endX, y: epac.endY }} angle={epac.endAngle + Math.PI * 0.4} />;
+      arrow = <EdgeArrow
+        point={{ x: endX, y: endY }}
+        angle={endAngle + Math.PI * 0.4}
+      />;
 
       label = (
         <EdgeLabel
           point={{
-            x: epac.circleX + epac.circleRadius * Math.cos(anchorAngle),
-            y: epac.circleY + epac.circleRadius * Math.sin(anchorAngle),
+            x: circleX + circleRadius * Math.cos(angle),
+            y: circleY + circleRadius * Math.sin(angle),
           }}
           text={symbol || ''}
-          angle={anchorAngle}
+          angle={angle}
         />
       );
+    }
+
+    function generateStraigthEdge(): void {
+      from = closestPointOnCircle({ cx: from.x, cy: from.y, r: fromRadius }, mpoint);
+      to = toState ? closestPointOnCircle({ cx: to.x, cy: to.y, r: getStateRadius(automaton, toState) }, from) : mpoint;
+
+      pathD = lineto(from, to);
+      arrow = <EdgeArrow point={to} angle={Math.atan2(to.y - from.y, to.x - from.x)} />;
+
+      const textAngle = Math.atan2(to.x - from.x, from.y - to.y);
+      label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
+    }
+
+    function generateCurvedEdge(): void {
+      // get anchor point
+      const dx = from.x - to.x;
+      const dy = from.y - to.y;
+      const scale = Math.sqrt(dx * dx + dy * dy);
+      const anchor = {
+        x: to.x + dx * tPositions.a - dy * tPositions.b / scale,
+        y: to.y + dy * tPositions.a + dx * tPositions.b / scale
+      };
+
+      const circle = circleFromThreePoints({ x: from.x, y: from.y }, { x: to.x, y: to.y }, anchor);
+      const isReversed = (tPositions.b > 0);
+      const reverseScale = isReversed ? 1 : -1;
+      const startAngle = Math.atan2(from.y - circle.cy, from.x - circle.cx) - reverseScale * fromRadius / circle.r;
+      const endAngle = Math.atan2(to.y - circle.cy, to.x - circle.cx) + reverseScale * (toState ? getStateRadius(automaton, toState) : Attributes.NODE_RADIUS) / circle.r;
+      const endX = circle.cx + circle.r * Math.cos(endAngle);
+      const endY = circle.cy + circle.r * Math.sin(endAngle);
+
+      pathD = arc(circle.cx, circle.cy, circle.r, startAngle, endAngle, isReversed);
+      arrow = <EdgeArrow
+        point={{ x: endX, y: endY }}
+        angle={endAngle - reverseScale * (Math.PI / 2)}
+      />;
+
+      const textAngle = Math.atan2(to.x - from.x, from.y - to.y);
+      label = <EdgeLabel point={mpoint} text={symbol || ''} angle={textAngle} />;
+    }
+
+    let arrow = null;
+    let label = null;
+    let pathD: Array<string> = [];
+
+    let from = getStatePosition(automaton, fromState);
+    let to = toState ? getStatePosition(automaton, toState) : mousePosition!;
+    const fromRadius = getStateRadius(automaton, fromState);
+    const mpoint = mousePosition || midpoint(from, to);
+    const tPositions = toState && automaton.transitionPositions ? automaton.transitionPositions.get(`${fromState}-${toState}`) : null;
+
+    if (fromState === toState) {
+      generateSelfEdge();
+    } else {
+      if (!tPositions || tPositions.b === 0) {
+        generateStraigthEdge();
+      } else {
+        generateCurvedEdge();
+      }
     }
 
     const edgeClass = classNames({

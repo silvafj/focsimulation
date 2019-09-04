@@ -115,8 +115,8 @@ const questions = {
 
 export const Practice: React.FC = () =>
 
-// TODO: improve this quiz with images, runtime generation of math formulas
-// allow answers to be tested in real time, show the state machine, etc
+  // TODO: improve this quiz with images, runtime generation of math formulas
+  // allow answers to be tested in real time, show the state machine, etc
 
   (
     <Layout>

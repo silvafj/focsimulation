@@ -1,7 +1,7 @@
 import noam from 'noam';
 
 import { Attributes as NodeAttrs } from '../automaton-designer/node/node';
-import { Point } from '../../utils/math';
+import { Point, angleOfLine } from '../../utils/math';
 
 function isSVGGElement(element: Element): boolean {
   // Can't use "element instanceof SVGGElement" because SVGGElement is not defined
@@ -148,7 +148,7 @@ export function removeState(automaton: any, state: string): void {
  * @param key
  */
 export function removeTransition(automaton: any, key: string): void {
-  automaton.transitionAngles.delete(key);
+  automaton.transitionPositions.delete(key);
 
   const [fromState, toState] = key.split('-');
   automaton.transitions = automaton.transitions.filter(
@@ -179,8 +179,8 @@ export function updateTransitions(
 
     noam.fsm.addTransition(automaton, transition.from, [transition.to], symbol);
 
-    if (!automaton.transitionAngles) {
-      automaton.transitionAngles = new Map<string, number>();
+    if (!automaton.transitionPositions) {
+      automaton.transitionPositions = new Map<string, { a: number, b: number }>();
     }
   }
 
@@ -208,20 +208,41 @@ export function updateTransitions(
 }
 
 /**
- * Update the transition angle.
+ * Update the transition position values.
  * 
  * @param automaton 
  * @param from 
  * @param to 
- * @param transitionAngle 
+ * @param position 
  */
-export function updateTransitionAngle(
+export function updateTransitionPositions(
   automaton: any,
   from: string,
   to: string,
-  transitionAngle: number,
+  position: Point,
 ): any {
-  automaton.transitionAngles.set(`${from}-${to}`, transitionAngle);
+  const fromPos = getStatePosition(automaton, from);
+
+  if (from === to) {
+    const angle = angleOfLine(fromPos, position);
+    automaton.transitionPositions.set(`${from}-${to}`, { a: angle, b: 0 });
+  } else {
+    const toPos = getStatePosition(automaton, to);
+
+    const dx = toPos.x - fromPos.x;
+    const dy = toPos.y - fromPos.y;
+    const scale = Math.sqrt(dx * dx + dy * dy);
+    const parallel = (dx * (position.x - fromPos.x) + dy * (position.y - fromPos.y)) / (scale * scale);
+    let perpendicular = (dx * (position.y - fromPos.y) - dy * (position.x - fromPos.x)) / scale;
+
+    const snapToBounds = 8
+    if (parallel > 0 && parallel < 1 && Math.abs(perpendicular) < snapToBounds) {
+      perpendicular = 0;
+    }
+
+    automaton.transitionPositions.set(`${from}-${to}`, { a: parallel, b: perpendicular });
+  }
+
   return automaton;
 }
 
