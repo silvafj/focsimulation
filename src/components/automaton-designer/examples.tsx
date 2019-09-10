@@ -317,4 +317,219 @@ export const Examples: Array<AutomatonExample> = [
       ]),
     },
   },
+  {
+    title: 'contain every symbol at least once',
+    testWord: 'abc',
+    automaton:
+    {
+      states: [
+        's',
+        'a',
+        'b',
+        'c',
+        'ab',
+        'ac',
+        'bc',
+        'abc',
+      ],
+      alphabet: [
+        'a',
+        'b',
+        'c',
+      ],
+      acceptingStates: [
+        'abc',
+      ],
+      initialState: 's',
+      transitions: [
+        {
+          fromState: 's',
+          toStates: [
+            'a',
+          ],
+          symbol: 'a',
+        },
+        {
+          fromState: 's',
+          toStates: [
+            'b',
+          ],
+          symbol: 'b',
+        },
+        {
+          fromState: 's',
+          toStates: [
+            'c',
+          ],
+          symbol: 'c',
+        },
+        {
+          fromState: 'a',
+          toStates: [
+            'a',
+          ],
+          symbol: 'a',
+        },
+        {
+          fromState: 'a',
+          toStates: [
+            'ab',
+          ],
+          symbol: 'b',
+        },
+        {
+          fromState: 'a',
+          toStates: [
+            'ac',
+          ],
+          symbol: 'c',
+        },
+        {
+          fromState: 'b',
+          toStates: [
+            'b',
+          ],
+          symbol: 'b',
+        },
+        {
+          fromState: 'b',
+          toStates: [
+            'ab',
+          ],
+          symbol: 'a',
+        },
+        {
+          fromState: 'b',
+          toStates: [
+            'bc',
+          ],
+          symbol: 'c',
+        },
+        {
+          fromState: 'c',
+          toStates: [
+            'c',
+          ],
+          symbol: 'c',
+        },
+        {
+          fromState: 'c',
+          toStates: [
+            'ac',
+          ],
+          symbol: 'a',
+        },
+        {
+          fromState: 'c',
+          toStates: [
+            'bc',
+          ],
+          symbol: 'b',
+        },
+        {
+          fromState: 'ab',
+          toStates: [
+            'ab',
+          ],
+          symbol: 'a',
+        },
+        {
+          fromState: 'ab',
+          toStates: [
+            'ab',
+          ],
+          symbol: 'b',
+        },
+        {
+          fromState: 'ab',
+          toStates: [
+            'abc',
+          ],
+          symbol: 'c',
+        },
+        {
+          fromState: 'ac',
+          toStates: [
+            'ac',
+          ],
+          symbol: 'a',
+        },
+        {
+          fromState: 'ac',
+          toStates: [
+            'ac',
+          ],
+          symbol: 'c',
+        },
+        {
+          fromState: 'ac',
+          toStates: [
+            'abc',
+          ],
+          symbol: 'b',
+        },
+        {
+          fromState: 'bc',
+          toStates: [
+            'bc',
+          ],
+          symbol: 'b',
+        },
+        {
+          fromState: 'bc',
+          toStates: [
+            'bc',
+          ],
+          symbol: 'c',
+        },
+        {
+          fromState: 'bc',
+          toStates: [
+            'abc',
+          ],
+          symbol: 'a',
+        },
+        {
+          fromState: 'abc',
+          toStates: [
+            'abc',
+          ],
+          symbol: 'a',
+        },
+        {
+          fromState: 'abc',
+          toStates: [
+            'abc',
+          ],
+          symbol: 'b',
+        },
+        {
+          fromState: 'abc',
+          toStates: [
+            'abc',
+          ],
+          symbol: 'c',
+        },
+
+      ],
+      statePositions: new Map([
+        ['s', { x: 50, y: 200 }],
+        ['b', { x: 200, y: 200 }],
+        ['ac', { x: 350, y: 200 }],
+        ['abc', { x: 500, y: 200 }],
+        ['a', { x: 200, y: 50 }],
+        ['ab', { x: 350, y: 50 }],
+        ['c', { x: 200, y: 350 }],
+        ['bc', { x: 350, y: 350 }],
+      ]),
+      transitionPositions: new Map([
+        ['a-a', { a: -1.6, b: 0 }],
+        ['b-b', { a: -1.6, b: 0 }],
+        ['c-c', { a: -1.6, b: 0 }],
+        ['ab-ab', { a: -1.6, b: 0 }],
+        ['ac-ac', { a: -1.6, b: 0 }],
+        ['bc-bc', { a: -1.6, b: 0 }],
+      ]),
+    },
+  },
 ];
