@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/focsimulation/precache-manifest.676bd9c0ad76aa68881921d33a04fba3.js"
+  "/focsimulation/precache-manifest.dd8e8ffe7b6512f1a98444e19b78b3d1.js"
 );
 
 self.addEventListener('message', (event) => {
