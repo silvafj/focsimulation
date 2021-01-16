@@ -3,6 +3,10 @@ The study of Computer Science requires the comprehension of mathematical concept
 
 This project is concerned with the design and implementation of an instructional simulation tool that provides pedagogical support for the Fundamentals of Computing module material. The functionality allows students to delve into regular languages and automata, experimenting with writing regular expressions, designing automata and, observing in real time their behaviour and outcome.
 
+## Demo
+
+https://silvafj.github.io/focsimulation/
+
 ## Quick start
 
 * Install npm
